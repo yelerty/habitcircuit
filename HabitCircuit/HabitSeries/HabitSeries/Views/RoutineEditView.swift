@@ -12,6 +12,33 @@ struct RoutineEditView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                // Time Type Selector for Edit
+                HStack(spacing: 12) {
+                    ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
+                        Button(action: {
+                            viewModel.changeTimeType(timeType)
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: timeType.icon)
+                                    .font(.caption)
+                                Text(timeType.rawValue)
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundColor(viewModel.selectedTimeType == timeType ? .white : .primary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(viewModel.selectedTimeType == timeType ? timeTypeColor(timeType) : Color.gray.opacity(0.1))
+                            )
+                        }
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.05))
+
+                Divider()
+
                 // Add Routine Section
                 VStack(spacing: 12) {
                     HStack {
@@ -24,7 +51,7 @@ struct RoutineEditView: View {
                         Button(action: addRoutine) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(timeTypeColor(viewModel.selectedTimeType))
                         }
                         .disabled(newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
@@ -179,6 +206,14 @@ struct RoutineEditView: View {
     private func cancelEdit() {
         editingRoutine = nil
         editingText = ""
+    }
+
+    private func timeTypeColor(_ timeType: RoutineTimeType) -> Color {
+        switch timeType {
+        case .morning: return .orange
+        case .afternoon: return .yellow
+        case .evening: return .indigo
+        }
     }
 }
 

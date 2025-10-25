@@ -22,6 +22,15 @@ struct HomeView: View {
                 }
                 .padding(.vertical)
 
+            // Time Type Selector
+            TimeTypeSelectorView(selectedTimeType: $viewModel.selectedTimeType, viewModel: viewModel)
+                .onChange(of: viewModel.selectedTimeType) { oldValue, newValue in
+                    viewModel.changeTimeType(newValue)
+                }
+                .padding(.vertical, 8)
+
+            Divider()
+
             if viewModel.hasRoutines {
                 // Progress Bar
                 ProgressView(value: viewModel.progressPercentage)
@@ -47,22 +56,36 @@ struct HomeView: View {
                 }
 
                 // Start Button
-                Button(action: {
-                    if viewModel.allRoutinesCompleted {
-                        viewModel.resetDailyRoutines()
-                    } else {
-                        showExecutionScreen = true
+                if viewModel.selectedDay == .today {
+                    Button(action: {
+                        if viewModel.allRoutinesCompleted {
+                            viewModel.resetDailyRoutines()
+                        } else {
+                            showExecutionScreen = true
+                        }
+                    }) {
+                        Text(viewModel.allRoutinesCompleted ? "다시 시작" : "루틴 시작")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(viewModel.allRoutinesCompleted ? Color.green : Color.blue)
+                            .cornerRadius(12)
                     }
-                }) {
-                    Text(viewModel.allRoutinesCompleted ? "다시 시작" : "루틴 시작")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(viewModel.allRoutinesCompleted ? Color.green : Color.blue)
-                        .cornerRadius(12)
+                    .padding()
+                } else {
+                    // Disabled state for past/future days
+                    VStack(spacing: 8) {
+                        Text(viewModel.selectedDay == .today ? "루틴 시작" : "오늘만 루틴을 시작할 수 있습니다")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal)
+                    .padding(.bottom)
                 }
-                .padding()
             } else {
                 // Empty State
                 VStack(spacing: 20) {
@@ -206,6 +229,58 @@ struct DaySelectorView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+struct TimeTypeSelectorView: View {
+    @Binding var selectedTimeType: RoutineTimeType
+    @ObservedObject var viewModel: RoutineViewModel
+
+    var body: some View {
+        HStack(spacing: 16) {
+            ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
+                Button(action: {
+                    selectedTimeType = timeType
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: timeType.icon)
+                            .font(.system(size: 16))
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(timeType.rawValue)
+                                .font(.system(size: 14, weight: .semibold))
+
+                            let count = viewModel.getRoutineCount(for: timeType)
+                            if count > 0 {
+                                Text("\(count)개")
+                                    .font(.system(size: 11))
+                                    .opacity(0.7)
+                            }
+                        }
+                    }
+                    .foregroundColor(selectedTimeType == timeType ? .white : .primary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(selectedTimeType == timeType ? timeTypeColor(timeType) : Color.gray.opacity(0.1))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(selectedTimeType == timeType ? timeTypeColor(timeType).opacity(0.5) : Color.clear, lineWidth: 2)
+                    )
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private func timeTypeColor(_ timeType: RoutineTimeType) -> Color {
+        switch timeType {
+        case .morning: return .orange
+        case .afternoon: return .yellow
+        case .evening: return .indigo
         }
     }
 }

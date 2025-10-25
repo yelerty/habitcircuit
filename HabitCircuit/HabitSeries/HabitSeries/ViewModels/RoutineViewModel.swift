@@ -6,29 +6,34 @@ import Combine
 class RoutineViewModel: ObservableObject {
     @Published var routines: [RoutineItem] = []
     @Published var selectedDay: DayOfWeek = .today
+    @Published var selectedTimeType: RoutineTimeType = .morning
     @Published var currentRoutineIndex: Int = 0
 
     private let viewContext: NSManagedObjectContext
+    private let lastResetDateKey = "lastResetDate"
 
     init(context: NSManagedObjectContext) {
         self.viewContext = context
+        resetPastDaysIfNeeded()
         loadRoutines()
     }
 
     // MARK: - Load Routines
     func loadRoutines() {
         let request = NSFetchRequest<Routine>(entityName: "Routine")
-        request.predicate = NSPredicate(format: "dayOfWeek == %@", selectedDay.rawValue)
+        request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@", selectedDay.rawValue, selectedTimeType.rawValue)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Routine.order, ascending: true)]
 
         do {
             let results = try viewContext.fetch(request)
             routines = results.map { routine in
-                RoutineItem(
+                let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
+                return RoutineItem(
                     id: routine.id ?? UUID(),
                     name: routine.name ?? "",
                     order: Int(routine.order),
                     dayOfWeek: routine.dayOfWeek ?? "",
+                    timeType: timeType,
                     isCompleted: routine.isCompleted
                 )
             }
@@ -38,12 +43,27 @@ class RoutineViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Get routines count by time type
+    func getRoutineCount(for timeType: RoutineTimeType) -> Int {
+        let request = NSFetchRequest<Routine>(entityName: "Routine")
+        request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@", selectedDay.rawValue, timeType.rawValue)
+
+        do {
+            let count = try viewContext.count(for: request)
+            return count
+        } catch {
+            print("Error counting routines: \(error)")
+            return 0
+        }
+    }
+
     // MARK: - Add Routine
-    func addRoutine(name: String) {
+    func addRoutine(name: String, timeType: RoutineTimeType? = nil) {
         let routine = Routine(context: viewContext)
         routine.id = UUID()
         routine.name = name
         routine.dayOfWeek = selectedDay.rawValue
+        routine.timeType = (timeType ?? selectedTimeType).rawValue
         routine.order = Int16(routines.count)
         routine.isCompleted = false
         routine.createdAt = Date()
@@ -199,5 +219,56 @@ class RoutineViewModel: ObservableObject {
     func changeDay(_ day: DayOfWeek) {
         selectedDay = day
         loadRoutines()
+    }
+
+    func changeTimeType(_ timeType: RoutineTimeType) {
+        selectedTimeType = timeType
+        loadRoutines()
+    }
+
+    // MARK: - Auto Reset Past Days
+    private func resetPastDaysIfNeeded() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        // Get last reset date from UserDefaults
+        if let lastResetDate = UserDefaults.standard.object(forKey: lastResetDateKey) as? Date {
+            let lastReset = calendar.startOfDay(for: lastResetDate)
+
+            // If last reset was not today, reset all past days
+            if lastReset < today {
+                resetAllPastDays()
+                UserDefaults.standard.set(today, forKey: lastResetDateKey)
+            }
+        } else {
+            // First launch - set today as reset date
+            UserDefaults.standard.set(today, forKey: lastResetDateKey)
+        }
+    }
+
+    private func resetAllPastDays() {
+        let allDays: [DayOfWeek] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
+
+        for day in allDays {
+            // Skip today - don't reset today's routines
+            if day == .today {
+                continue
+            }
+
+            // Reset all routines for this day
+            let request = NSFetchRequest<Routine>(entityName: "Routine")
+            request.predicate = NSPredicate(format: "dayOfWeek == %@", day.rawValue)
+
+            do {
+                let results = try viewContext.fetch(request)
+                for routine in results {
+                    routine.isCompleted = false
+                }
+            } catch {
+                print("Error resetting routines for \(day.rawValue): \(error)")
+            }
+        }
+
+        saveContext()
     }
 }
