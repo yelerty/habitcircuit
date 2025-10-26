@@ -5,7 +5,7 @@ struct RoutineExecutionView: View {
     @ObservedObject var viewModel: RoutineViewModel
     @Binding var isPresented: Bool
     @State private var showCompletionView = false
-    @State private var rectanglePosition: CGPoint = .zero
+    @State private var rectangleOffset: CGSize = .zero
     @State private var currentCorner: Int = 0
 
     var body: some View {
@@ -28,7 +28,7 @@ struct RoutineExecutionView: View {
                 Color.black
                     .ignoresSafeArea()
 
-                // Small rectangle that moves around corners
+                // Content container that moves around
                 VStack(spacing: 0) {
                     // Header with Close Button
                     HStack {
@@ -38,6 +38,8 @@ struct RoutineExecutionView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(.white.opacity(0.6))
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
 
                         Spacer()
@@ -84,6 +86,8 @@ struct RoutineExecutionView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.4))
                         }
+                        .id(currentRoutine.id)
+                        .transition(.opacity)
                     }
 
                     Spacer()
@@ -110,20 +114,22 @@ struct RoutineExecutionView: View {
                                     .font(.caption)
                             }
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
                             .background(Color.white.opacity(0.1))
                             .cornerRadius(20)
+                            .contentShape(Rectangle())
                         }
+                        .frame(minWidth: 80, minHeight: 44)
                         .padding(.bottom, 40)
                     }
                 }
                 .frame(width: 300, height: 400)
-                .background(Color.black)
-                .position(rectanglePosition)
+                .offset(rectangleOffset)
+                .animation(.easeInOut(duration: 30), value: rectangleOffset)
+                .allowsHitTesting(true)
                 .onAppear {
-                    // Start at top-left corner
-                    rectanglePosition = CGPoint(x: 150, y: 200)
+                    // Start animation immediately
                     moveToNextCorner(screenSize: geometry.size)
                 }
             }
@@ -131,19 +137,24 @@ struct RoutineExecutionView: View {
     }
 
     private func moveToNextCorner(screenSize: CGSize) {
+        let rectWidth: CGFloat = 300
+        let rectHeight: CGFloat = 400
+
+        // Calculate center position
+        let centerX = screenSize.width / 2
+        let centerY = screenSize.height / 2
+
+        // Calculate offsets from center to each corner
         let padding: CGFloat = 150
-        let positions: [CGPoint] = [
-            CGPoint(x: padding, y: padding), // Top-left
-            CGPoint(x: screenSize.width - padding, y: padding), // Top-right
-            CGPoint(x: screenSize.width - padding, y: screenSize.height - padding), // Bottom-right
-            CGPoint(x: padding, y: screenSize.height - padding), // Bottom-left
+        let offsets: [CGSize] = [
+            CGSize(width: -(centerX - padding), height: -(centerY - padding)), // Top-left
+            CGSize(width: (centerX - padding), height: -(centerY - padding)), // Top-right
+            CGSize(width: (centerX - padding), height: (centerY - padding)), // Bottom-right
+            CGSize(width: -(centerX - padding), height: (centerY - padding)), // Bottom-left
         ]
 
-        currentCorner = (currentCorner + 1) % positions.count
-
-        withAnimation(.easeInOut(duration: 30)) {
-            rectanglePosition = positions[currentCorner]
-        }
+        currentCorner = (currentCorner + 1) % offsets.count
+        rectangleOffset = offsets[currentCorner]
 
         // Schedule next move
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
