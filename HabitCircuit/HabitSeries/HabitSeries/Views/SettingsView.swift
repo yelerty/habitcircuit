@@ -4,6 +4,13 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var streakManager = StreakManager.shared
+    @StateObject private var viewModel = RoutineViewModel(context: PersistenceController.shared.container.viewContext)
+
+    @State private var showExportSheet = false
+    @State private var showImportSheet = false
+    @State private var exportedFileURL: URL?
+    @State private var showAlert = false
+    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
@@ -65,6 +72,33 @@ struct SettingsView: View {
                     Label("통계", systemImage: "chart.bar.fill")
                 }
 
+                // Data Management Section
+                Section {
+                    Button(action: {
+                        exportRoutines()
+                    }) {
+                        HStack {
+                            Label("루틴 내보내기", systemImage: "square.and.arrow.up")
+                                .foregroundColor(.blue)
+                            Spacer()
+                        }
+                    }
+
+                    Button(action: {
+                        showImportSheet = true
+                    }) {
+                        HStack {
+                            Label("루틴 가져오기", systemImage: "square.and.arrow.down")
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                    }
+                } header: {
+                    Label("데이터 관리", systemImage: "folder.fill")
+                } footer: {
+                    Text("루틴을 JSON 파일로 내보내거나 파일에서 가져올 수 있습니다")
+                }
+
                 // App Info Section
                 Section {
                     HStack {
@@ -86,6 +120,62 @@ struct SettingsView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showExportSheet) {
+                if let url = exportedFileURL {
+                    ShareSheet(items: [url])
+                }
+            }
+            .sheet(isPresented: $showImportSheet) {
+                DocumentPicker(completion: handleImport)
+            }
+            .alert("알림", isPresented: $showAlert) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text(alertMessage)
+            }
+        }
+    }
+
+    // MARK: - Export Function
+    private func exportRoutines() {
+        guard let jsonData = viewModel.exportAllRoutines() else {
+            alertMessage = "루틴을 내보내는 중 오류가 발생했습니다."
+            showAlert = true
+            return
+        }
+
+        let fileName = RoutineExportManager.shared.generateFileName()
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try jsonData.write(to: tempURL)
+            exportedFileURL = tempURL
+            showExportSheet = true
+        } catch {
+            alertMessage = "파일 저장 중 오류가 발생했습니다: \(error.localizedDescription)"
+            showAlert = true
+        }
+    }
+
+    // MARK: - Import Function
+    private func handleImport(result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                let data = try Data(contentsOf: url)
+                let success = viewModel.importRoutines(from: data, replaceExisting: false)
+                if success {
+                    alertMessage = "루틴을 성공적으로 가져왔습니다!"
+                } else {
+                    alertMessage = "루틴 가져오기에 실패했습니다. 파일 형식을 확인해주세요."
+                }
+            } catch {
+                alertMessage = "파일 읽기 중 오류가 발생했습니다: \(error.localizedDescription)"
+            }
+            showAlert = true
+        case .failure(let error):
+            alertMessage = "파일 선택 중 오류가 발생했습니다: \(error.localizedDescription)"
+            showAlert = true
         }
     }
 }

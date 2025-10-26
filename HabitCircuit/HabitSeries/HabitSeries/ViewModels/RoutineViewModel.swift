@@ -5,6 +5,7 @@ import Combine
 
 class RoutineViewModel: ObservableObject {
     @Published var routines: [RoutineItem] = []
+    @Published var allRoutines: [RoutineItem] = []
     @Published var selectedDay: DayOfWeek = .today
     @Published var selectedTimeType: RoutineTimeType = .morning
     @Published var currentRoutineIndex: Int = 0
@@ -16,6 +17,7 @@ class RoutineViewModel: ObservableObject {
         self.viewContext = context
         resetPastDaysIfNeeded()
         loadRoutines()
+        loadAllRoutines()
     }
 
     // MARK: - Load Routines
@@ -40,6 +42,33 @@ class RoutineViewModel: ObservableObject {
             updateCurrentRoutineIndex()
         } catch {
             print("Error fetching routines: \(error)")
+        }
+    }
+
+    // MARK: - Load All Routines (for current day, all time types)
+    func loadAllRoutines() {
+        let request = NSFetchRequest<Routine>(entityName: "Routine")
+        request.predicate = NSPredicate(format: "dayOfWeek == %@", selectedDay.rawValue)
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Routine.timeType, ascending: true),
+            NSSortDescriptor(keyPath: \Routine.order, ascending: true)
+        ]
+
+        do {
+            let results = try viewContext.fetch(request)
+            allRoutines = results.map { routine in
+                let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
+                return RoutineItem(
+                    id: routine.id ?? UUID(),
+                    name: routine.name ?? "",
+                    order: Int(routine.order),
+                    dayOfWeek: routine.dayOfWeek ?? "",
+                    timeType: timeType,
+                    isCompleted: routine.isCompleted
+                )
+            }
+        } catch {
+            print("Error fetching all routines: \(error)")
         }
     }
 
@@ -70,6 +99,7 @@ class RoutineViewModel: ObservableObject {
 
         saveContext()
         loadRoutines()
+        loadAllRoutines()
     }
 
     // MARK: - Delete Routine
@@ -92,6 +122,7 @@ class RoutineViewModel: ObservableObject {
         saveContext()
         reorderRoutines()
         loadRoutines()
+        loadAllRoutines()
     }
 
     // MARK: - Move Routine
@@ -131,6 +162,7 @@ class RoutineViewModel: ObservableObject {
                 routine.isCompleted = true
                 saveContext()
                 loadRoutines()
+                loadAllRoutines()
                 // loadRoutines()가 updateCurrentRoutineIndex()를 호출하므로 별도 증가 불필요
             }
         } catch {
@@ -150,6 +182,7 @@ class RoutineViewModel: ObservableObject {
             }
             saveContext()
             loadRoutines()
+            loadAllRoutines()
             currentRoutineIndex = 0
         } catch {
             print("Error resetting routines: \(error)")
@@ -219,6 +252,7 @@ class RoutineViewModel: ObservableObject {
     func changeDay(_ day: DayOfWeek) {
         selectedDay = day
         loadRoutines()
+        loadAllRoutines()
     }
 
     func changeTimeType(_ timeType: RoutineTimeType) {
@@ -270,5 +304,75 @@ class RoutineViewModel: ObservableObject {
         }
 
         saveContext()
+    }
+
+    // MARK: - Export/Import Functions
+    func exportAllRoutines() -> Data? {
+        let request = NSFetchRequest<Routine>(entityName: "Routine")
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Routine.dayOfWeek, ascending: true),
+            NSSortDescriptor(keyPath: \Routine.timeType, ascending: true),
+            NSSortDescriptor(keyPath: \Routine.order, ascending: true)
+        ]
+
+        do {
+            let results = try viewContext.fetch(request)
+            let routineItems = results.map { routine in
+                let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
+                return RoutineItem(
+                    id: routine.id ?? UUID(),
+                    name: routine.name ?? "",
+                    order: Int(routine.order),
+                    dayOfWeek: routine.dayOfWeek ?? "",
+                    timeType: timeType,
+                    isCompleted: false // Don't export completion status
+                )
+            }
+
+            return RoutineExportManager.shared.exportRoutines(routines: routineItems)
+        } catch {
+            print("Error fetching routines for export: \(error)")
+            return nil
+        }
+    }
+
+    func importRoutines(from data: Data, replaceExisting: Bool = false) -> Bool {
+        guard let exportedRoutines = RoutineExportManager.shared.importRoutines(from: data) else {
+            return false
+        }
+
+        // If replace existing, delete all routines first
+        if replaceExisting {
+            deleteAllRoutines()
+        }
+
+        // Import new routines
+        for exportedRoutine in exportedRoutines {
+            let routine = Routine(context: viewContext)
+            routine.id = UUID()
+            routine.name = exportedRoutine.name
+            routine.dayOfWeek = exportedRoutine.dayOfWeek
+            routine.timeType = exportedRoutine.timeType
+            routine.order = Int16(exportedRoutine.order)
+            routine.isCompleted = false
+            routine.createdAt = Date()
+        }
+
+        saveContext()
+        loadRoutines()
+        loadAllRoutines()
+        return true
+    }
+
+    private func deleteAllRoutines() {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Routine")
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+
+        do {
+            try viewContext.execute(deleteRequest)
+            saveContext()
+        } catch {
+            print("Error deleting all routines: \(error)")
+        }
     }
 }

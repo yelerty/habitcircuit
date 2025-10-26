@@ -24,33 +24,16 @@ struct HomeView: View {
                 }
                 .padding(.vertical)
 
-            // Time Type Selector
-            TimeTypeSelectorView(selectedTimeType: $viewModel.selectedTimeType, viewModel: viewModel)
-                .onChange(of: viewModel.selectedTimeType) { oldValue, newValue in
-                    viewModel.changeTimeType(newValue)
-                }
-                .padding(.vertical, 8)
-
             Divider()
 
             if viewModel.hasRoutines {
-                // Progress Bar
-                ProgressView(value: viewModel.progressPercentage)
-                    .padding(.horizontal)
-
-                Text(viewModel.progressText + " 완료")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.top, 4)
-
-                // Routine List
+                // Time-based Routine Boxes
                 ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(Array(viewModel.routines.enumerated()), id: \.element.id) { index, routine in
-                            RoutineRowView(
-                                routine: routine,
-                                isActive: index == viewModel.currentRoutineIndex,
-                                isCompleted: routine.isCompleted
+                    VStack(spacing: 16) {
+                        ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
+                            TimeRoutineBoxView(
+                                viewModel: viewModel,
+                                timeType: timeType
                             )
                         }
                     }
@@ -284,54 +267,88 @@ struct DaySelectorView: View {
     }
 }
 
-struct TimeTypeSelectorView: View {
-    @Binding var selectedTimeType: RoutineTimeType
+struct TimeRoutineBoxView: View {
     @ObservedObject var viewModel: RoutineViewModel
+    let timeType: RoutineTimeType
 
-    var body: some View {
-        HStack(spacing: 16) {
-            ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
-                Button(action: {
-                    selectedTimeType = timeType
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: timeType.icon)
-                            .font(.system(size: 16))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(timeType.rawValue)
-                                .font(.system(size: 14, weight: .semibold))
-
-                            let count = viewModel.getRoutineCount(for: timeType)
-                            if count > 0 {
-                                Text("\(count)개")
-                                    .font(.system(size: 11))
-                                    .opacity(0.7)
-                            }
-                        }
-                    }
-                    .foregroundColor(selectedTimeType == timeType ? .white : .primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(selectedTimeType == timeType ? timeTypeColor(timeType) : Color.gray.opacity(0.1))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(selectedTimeType == timeType ? timeTypeColor(timeType).opacity(0.5) : Color.clear, lineWidth: 2)
-                    )
-                }
-            }
-        }
-        .padding(.horizontal)
+    private var routinesForTimeType: [RoutineItem] {
+        viewModel.allRoutines.filter { $0.timeType == timeType }
     }
 
-    private func timeTypeColor(_ timeType: RoutineTimeType) -> Color {
+    private var completedCount: Int {
+        routinesForTimeType.filter { $0.isCompleted }.count
+    }
+
+    private var totalCount: Int {
+        routinesForTimeType.count
+    }
+
+    private var progressPercentage: Double {
+        guard totalCount > 0 else { return 0 }
+        return Double(completedCount) / Double(totalCount)
+    }
+
+    private var timeTypeColor: Color {
         switch timeType {
         case .morning: return .orange
         case .afternoon: return .yellow
         case .evening: return .indigo
+        }
+    }
+
+    var body: some View {
+        if totalCount > 0 {
+            VStack(alignment: .leading, spacing: 12) {
+                // Header
+                HStack {
+                    Image(systemName: timeType.icon)
+                        .font(.title2)
+                        .foregroundColor(timeTypeColor)
+
+                    Text(timeType.rawValue)
+                        .font(.title3)
+                        .fontWeight(.bold)
+
+                    Spacer()
+
+                    Text("\(completedCount)/\(totalCount)")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+
+                // Progress Bar
+                ProgressView(value: progressPercentage)
+                    .tint(timeTypeColor)
+
+                // Routine List
+                VStack(spacing: 8) {
+                    ForEach(routinesForTimeType) { routine in
+                        HStack(spacing: 12) {
+                            Image(systemName: routine.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(routine.isCompleted ? .green : .gray)
+                                .font(.body)
+
+                            Text(routine.name)
+                                .font(.body)
+                                .foregroundColor(routine.isCompleted ? .gray : .primary)
+                                .strikethrough(routine.isCompleted)
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .padding(.top, 4)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(timeTypeColor.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(timeTypeColor.opacity(0.3), lineWidth: 2)
+            )
         }
     }
 }

@@ -28,7 +28,17 @@ struct RoutineExecutionView: View {
                 Color.black
                     .ignoresSafeArea()
 
-                // Content container that moves around
+                // Moving dot indicator for screen burn-in protection (small, subtle)
+                Circle()
+                    .fill(Color.white.opacity(0.03))
+                    .frame(width: 20, height: 20)
+                    .offset(rectangleOffset)
+                    .animation(.easeInOut(duration: 30), value: rectangleOffset)
+                    .onAppear {
+                        moveToNextCorner(screenSize: geometry.size)
+                    }
+
+                // Fixed content container
                 VStack(spacing: 0) {
                     // Header with Close Button
                     HStack {
@@ -123,14 +133,6 @@ struct RoutineExecutionView: View {
                         .frame(minWidth: 80, minHeight: 44)
                         .padding(.bottom, 40)
                     }
-                }
-                .frame(width: 300, height: 400)
-                .offset(rectangleOffset)
-                .animation(.easeInOut(duration: 30), value: rectangleOffset)
-                .allowsHitTesting(true)
-                .onAppear {
-                    // Start animation immediately
-                    moveToNextCorner(screenSize: geometry.size)
                 }
             }
         }
