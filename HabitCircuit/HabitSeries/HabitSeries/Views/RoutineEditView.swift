@@ -220,47 +220,151 @@ struct RoutineEditView: View {
 // MARK: - Default Routines Sheet
 struct DefaultRoutinesSheet: View {
     @Environment(\.dismiss) var dismiss
+    @StateObject private var defaultRoutines = DefaultRoutines()
+    @State private var newRoutineName = ""
+    @State private var showingAddAlert = false
+
     let onSelect: (String) -> Void
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 12) {
-                    Text("원하는 루틴을 탭하여 추가하세요")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        .padding(.top)
-
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ], spacing: 12) {
-                        ForEach(DefaultRoutines.examples, id: \.self) { routine in
-                            Button(action: {
-                                onSelect(routine)
-                            }) {
-                                HStack {
-                                    Image(systemName: "plus.circle.fill")
-                                        .foregroundColor(.blue)
-                                        .font(.caption)
-
-                                    Text(routine)
-                                        .font(.body)
-                                        .foregroundColor(.primary)
-
-                                    Spacer()
-                                }
-                                .padding()
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.blue.opacity(0.1))
-                                )
+            VStack(spacing: 0) {
+                // Add Custom Routine Section
+                VStack(spacing: 8) {
+                    HStack {
+                        TextField("나만의 루틴 추가", text: $newRoutineName)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onSubmit {
+                                addCustomRoutine()
                             }
+
+                        Button(action: addCustomRoutine) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.green)
+                        }
+                        .disabled(newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+
+                    Text("자주 사용하는 루틴을 추가하여 관리하세요")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding()
+                .background(Color.green.opacity(0.05))
+
+                Divider()
+
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("원하는 루틴을 탭하여 추가하세요")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .padding(.top)
+
+                        // Custom Routines Section
+                        if !defaultRoutines.customRoutines.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(.green)
+                                        .font(.caption)
+                                    Text("나만의 루틴")
+                                        .font(.headline)
+                                        .foregroundColor(.green)
+                                }
+                                .padding(.horizontal)
+
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible()),
+                                    GridItem(.flexible())
+                                ], spacing: 12) {
+                                    ForEach(Array(defaultRoutines.customRoutines.enumerated()), id: \.element) { index, routine in
+                                        HStack {
+                                            Button(action: {
+                                                onSelect(routine)
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: "plus.circle.fill")
+                                                        .foregroundColor(.green)
+                                                        .font(.caption)
+
+                                                    Text(routine)
+                                                        .font(.body)
+                                                        .foregroundColor(.primary)
+
+                                                    Spacer()
+                                                }
+                                            }
+
+                                            Button(action: {
+                                                defaultRoutines.deleteCustomRoutine(at: index)
+                                            }) {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundColor(.red)
+                                                    .font(.caption)
+                                            }
+                                            .buttonStyle(BorderlessButtonStyle())
+                                        }
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.green.opacity(0.1))
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+
+                            Divider()
+                                .padding(.vertical, 8)
+                        }
+
+                        // Built-in Routines Section
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "lightbulb.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("기본 예시")
+                                    .font(.headline)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.horizontal)
+
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 12) {
+                                ForEach(DefaultRoutines.builtInExamples, id: \.self) { routine in
+                                    Button(action: {
+                                        onSelect(routine)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "plus.circle.fill")
+                                                .foregroundColor(.blue)
+                                                .font(.caption)
+
+                                            Text(routine)
+                                                .font(.body)
+                                                .foregroundColor(.primary)
+
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.blue.opacity(0.1))
+                                        )
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.bottom)
                 }
-                .padding(.bottom)
             }
             .navigationTitle("루틴 예시")
             .navigationBarTitleDisplayMode(.inline)
@@ -272,6 +376,14 @@ struct DefaultRoutinesSheet: View {
                 }
             }
         }
+    }
+
+    private func addCustomRoutine() {
+        let trimmed = newRoutineName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+
+        defaultRoutines.addCustomRoutine(trimmed)
+        newRoutineName = ""
     }
 }
 
