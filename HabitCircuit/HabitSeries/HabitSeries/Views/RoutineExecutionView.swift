@@ -5,6 +5,8 @@ struct RoutineExecutionView: View {
     @ObservedObject var viewModel: RoutineViewModel
     @Binding var isPresented: Bool
     @State private var showCompletionView = false
+    @State private var rectanglePosition: CGPoint = .zero
+    @State private var currentCorner: Int = 0
 
     var body: some View {
         ZStack {
@@ -20,112 +22,135 @@ struct RoutineExecutionView: View {
     }
 
     var executionContent: some View {
-        VStack(spacing: 0) {
-            // Header with Close Button
-            HStack {
-                Button(action: {
-                    isPresented = false
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                }
+        GeometryReader { geometry in
+            ZStack {
+                // Black background
+                Color.black
+                    .ignoresSafeArea()
 
-                Spacer()
-            }
-            .padding()
+                // Small rectangle that moves around corners
+                VStack(spacing: 0) {
+                    // Header with Close Button
+                    HStack {
+                        Button(action: {
+                            isPresented = false
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white.opacity(0.6))
+                        }
 
-            Spacer()
+                        Spacer()
 
-            // Progress Circle
-            VStack(spacing: 20) {
-                ZStack {
-                    // Background Circle
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 15)
-                        .frame(width: 200, height: 200)
-
-                    // Progress Circle
-                    Circle()
-                        .trim(from: 0, to: viewModel.progressPercentage)
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.blue, Color.purple]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 15, lineCap: .round)
-                        )
-                        .frame(width: 200, height: 200)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut, value: viewModel.progressPercentage)
-
-                    // Progress Text
-                    VStack(spacing: 8) {
+                        // Minimal progress indicator
                         Text(viewModel.progressText)
-                            .font(.system(size: 36, weight: .bold))
-
-                        Text("완료")
-                            .font(.body)
-                            .foregroundColor(.gray)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.5))
                     }
-                }
+                    .padding()
 
-                // Current Routine Name
-                if let currentRoutine = viewModel.currentRoutine {
-                    VStack(spacing: 12) {
-                        Text("현재 루틴")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                    Spacer()
 
-                        Text(currentRoutine.name)
-                            .font(.system(size: 28, weight: .bold))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    .padding(.top, 40)
-                }
-            }
+                    // Current Routine - Large and Centered
+                    if let currentRoutine = viewModel.currentRoutine {
+                        VStack(spacing: 24) {
+                            // Progress Circle - Minimal
+                            ZStack {
+                                Circle()
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 4)
+                                    .frame(width: 80, height: 80)
 
-            Spacer()
-
-            // Complete Button
-            if let _ = viewModel.currentRoutine {
-                Button(action: {
-                    withAnimation {
-                        viewModel.completeCurrentRoutine()
-
-                        // Check if all completed
-                        if viewModel.allRoutinesCompleted {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                showCompletionView = true
+                                Circle()
+                                    .trim(from: 0, to: viewModel.progressPercentage)
+                                    .stroke(
+                                        Color.white.opacity(0.8),
+                                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                    )
+                                    .frame(width: 80, height: 80)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut, value: viewModel.progressPercentage)
                             }
+
+                            // Current Routine Name - Large Focus
+                            Text(currentRoutine.name)
+                                .font(.system(size: 42, weight: .bold))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                                .lineLimit(3)
+
+                            // Subtle hint
+                            Text("집중하세요")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.4))
                         }
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title3)
 
-                        Text("완료")
-                            .font(.headline)
+                    Spacer()
+
+                    // Complete Button - Small and Dark
+                    if let _ = viewModel.currentRoutine {
+                        Button(action: {
+                            withAnimation {
+                                viewModel.completeCurrentRoutine()
+
+                                // Check if all completed
+                                if viewModel.allRoutinesCompleted {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        showCompletionView = true
+                                    }
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.caption)
+
+                                Text("완료")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(20)
+                        }
+                        .padding(.bottom, 40)
                     }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.blue, Color.purple]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(15)
                 }
-                .padding()
+                .frame(width: 300, height: 400)
+                .background(Color.black)
+                .position(rectanglePosition)
+                .onAppear {
+                    // Start at top-left corner
+                    rectanglePosition = CGPoint(x: 150, y: 200)
+                    moveToNextCorner(screenSize: geometry.size)
+                }
             }
         }
-        .background(Color(.systemBackground))
+    }
+
+    private func moveToNextCorner(screenSize: CGSize) {
+        let padding: CGFloat = 150
+        let positions: [CGPoint] = [
+            CGPoint(x: padding, y: padding), // Top-left
+            CGPoint(x: screenSize.width - padding, y: padding), // Top-right
+            CGPoint(x: screenSize.width - padding, y: screenSize.height - padding), // Bottom-right
+            CGPoint(x: padding, y: screenSize.height - padding), // Bottom-left
+        ]
+
+        currentCorner = (currentCorner + 1) % positions.count
+
+        withAnimation(.easeInOut(duration: 30)) {
+            rectanglePosition = positions[currentCorner]
+        }
+
+        // Schedule next move
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+            if !showCompletionView && !viewModel.allRoutinesCompleted {
+                moveToNextCorner(screenSize: screenSize)
+            }
+        }
     }
 }
 
@@ -135,6 +160,7 @@ struct CompletionView: View {
     @State private var showConfetti = false
     @State private var titleScale: CGFloat = 0.5
     @State private var titleOpacity: Double = 0
+    @StateObject private var streakManager = StreakManager.shared
 
     var body: some View {
         ZStack {
@@ -169,6 +195,28 @@ struct CompletionView: View {
                         .font(.body)
                         .foregroundColor(.gray)
                         .opacity(titleOpacity)
+
+                    // Streak Display
+                    HStack(spacing: 12) {
+                        Text(streakManager.streakEmoji)
+                            .font(.system(size: 40))
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(streakManager.currentStreak)일 연속")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.orange)
+
+                            Text(streakManager.motivationalMessage)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.orange.opacity(0.1))
+                    )
+                    .opacity(titleOpacity)
                 }
                 .onAppear {
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.3)) {
@@ -230,6 +278,9 @@ struct CompletionView: View {
         }
     }
     .onAppear {
+        // Record streak completion
+        streakManager.recordCompletion()
+
         // Trigger confetti animation
         showConfetti = true
 

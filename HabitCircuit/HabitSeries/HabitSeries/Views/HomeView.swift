@@ -4,6 +4,8 @@ struct HomeView: View {
     @ObservedObject var viewModel: RoutineViewModel
     @Binding var showEditScreen: Bool
     @State private var showExecutionScreen = false
+    @State private var showSettings = false
+    @StateObject private var streakManager = StreakManager.shared
 
     private var navigationTitle: String {
         let formatter = DateFormatter()
@@ -120,17 +122,66 @@ struct HomeView: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                // Streak Badge
+                HStack(spacing: 6) {
+                    Text(streakManager.streakEmoji)
+                        .font(.system(size: 20))
+                    Text("\(streakManager.currentStreak)")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.orange)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color.orange.opacity(0.15))
+                )
+            }
+
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    showEditScreen = true
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
+                HStack(spacing: 16) {
+                    Button(action: {
+                        showSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title3)
+                    }
+
+                    Button(action: {
+                        showEditScreen = true
+                    }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                    }
                 }
             }
         }
         .fullScreenCover(isPresented: $showExecutionScreen) {
             RoutineExecutionView(viewModel: viewModel, isPresented: $showExecutionScreen)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
+        .gesture(
+            DragGesture(minimumDistance: 50)
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        // Swipe left - next day
+                        withAnimation {
+                            viewModel.changeDay(viewModel.selectedDay.next)
+                        }
+                    } else if value.translation.width > 50 {
+                        // Swipe right - previous day
+                        withAnimation {
+                            viewModel.changeDay(viewModel.selectedDay.previous)
+                        }
+                    }
+                }
+        )
+        .onAppear {
+            // Check streak status on app launch
+            streakManager.checkStreakStatus()
         }
     }
 }

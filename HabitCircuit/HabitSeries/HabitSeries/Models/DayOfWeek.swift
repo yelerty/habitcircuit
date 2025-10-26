@@ -36,4 +36,20 @@ enum DayOfWeek: String, CaseIterable {
         default: return .monday
         }
     }
+
+    // Get next day (circular)
+    var next: DayOfWeek {
+        let allDays = DayOfWeek.allCases
+        guard let currentIndex = allDays.firstIndex(of: self) else { return .monday }
+        let nextIndex = (currentIndex + 1) % allDays.count
+        return allDays[nextIndex]
+    }
+
+    // Get previous day (circular)
+    var previous: DayOfWeek {
+        let allDays = DayOfWeek.allCases
+        guard let currentIndex = allDays.firstIndex(of: self) else { return .monday }
+        let previousIndex = (currentIndex - 1 + allDays.count) % allDays.count
+        return allDays[previousIndex]
+    }
 }
