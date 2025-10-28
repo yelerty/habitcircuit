@@ -1,0 +1,21 @@
+# Xcode
+#
+# gitignore contributors: remember to keep this file up to date with
+# https://github.com/github/gitignore/blob/main/Global/Xcode.gitignore
+#
+## User-specific
+*.DS_Store
+.com.apple.mobileicons.iconset
+build/
+DerivedData/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/
+
+## Swift Package Manager
+#
+# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
+# Packages/
+#
+.swiftpm/
+Package.resolved
