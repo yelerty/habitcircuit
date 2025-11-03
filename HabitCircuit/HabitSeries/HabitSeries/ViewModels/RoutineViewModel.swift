@@ -28,6 +28,8 @@ class RoutineViewModel: ObservableObject {
 
         do {
             let results = try viewContext.fetch(request)
+            print("📥 loadRoutines - Fetched \(results.count) routines from DB")
+
             routines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
                 return RoutineItem(
@@ -40,8 +42,9 @@ class RoutineViewModel: ObservableObject {
                 )
             }
             updateCurrentRoutineIndex()
+            print("✅ loadRoutines - Updated routines to \(routines.count) items")
         } catch {
-            print("Error fetching routines: \(error)")
+            print("❌ Error fetching routines: \(error)")
         }
     }
 
@@ -56,6 +59,8 @@ class RoutineViewModel: ObservableObject {
 
         do {
             let results = try viewContext.fetch(request)
+            print("📥 loadAllRoutines - Fetched \(results.count) routines from DB")
+
             allRoutines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
                 return RoutineItem(
@@ -67,8 +72,9 @@ class RoutineViewModel: ObservableObject {
                     isCompleted: routine.isCompleted
                 )
             }
+            print("✅ loadAllRoutines - Updated allRoutines to \(allRoutines.count) items")
         } catch {
-            print("Error fetching all routines: \(error)")
+            print("❌ Error fetching all routines: \(error)")
         }
     }
 
@@ -104,8 +110,12 @@ class RoutineViewModel: ObservableObject {
 
     // MARK: - Delete Routine
     func deleteRoutine(at indexSet: IndexSet) {
+        print("🗑️ Delete started - Current routines count: \(routines.count)")
+
         for index in indexSet {
             let routineToDelete = routines[index]
+            print("🗑️ Deleting routine: \(routineToDelete.name) (ID: \(routineToDelete.id))")
+
             let request = NSFetchRequest<Routine>(entityName: "Routine")
             request.predicate = NSPredicate(format: "id == %@", routineToDelete.id as CVarArg)
 
@@ -113,16 +123,64 @@ class RoutineViewModel: ObservableObject {
                 let results = try viewContext.fetch(request)
                 if let routine = results.first {
                     viewContext.delete(routine)
+                    print("✅ Deleted from context")
                 }
             } catch {
-                print("Error deleting routine: \(error)")
+                print("❌ Error deleting routine: \(error)")
             }
         }
 
+        // Save the deletion
         saveContext()
-        reorderRoutines()
+        print("💾 Context saved after deletion")
+
+        // Refresh the context to ensure we get fresh data
+        viewContext.refreshAllObjects()
+        print("🔄 Context refreshed")
+
+        // Load routines first to update the in-memory array before reordering
         loadRoutines()
+        print("📊 After first load - routines count: \(routines.count)")
+
         loadAllRoutines()
+        print("📊 After first load - allRoutines count: \(allRoutines.count)")
+
+        // Reorder if there are remaining routines
+        if !routines.isEmpty {
+            print("🔢 Reordering \(routines.count) routines")
+            reorderRoutines()
+
+            // Refresh again after reordering
+            viewContext.refreshAllObjects()
+
+            // Reload after reordering to ensure UI is in sync
+            loadRoutines()
+            print("📊 After reorder - routines count: \(routines.count)")
+
+            loadAllRoutines()
+            print("📊 After reorder - allRoutines count: \(allRoutines.count)")
+        } else {
+            // If current time type has no routines, switch to a time type that has routines
+            print("⚠️ Current time type is empty, checking other time types...")
+            switchToNonEmptyTimeType()
+        }
+
+        print("✅ Delete completed - Final routines count: \(routines.count)")
+    }
+
+    // MARK: - Switch to Non-Empty Time Type
+    private func switchToNonEmptyTimeType() {
+        // Find a time type with routines
+        for timeType in RoutineTimeType.allCases {
+            let count = getRoutineCount(for: timeType)
+            if count > 0 {
+                print("🔄 Switching to \(timeType.rawValue) which has \(count) routines")
+                selectedTimeType = timeType
+                loadRoutines()
+                return
+            }
+        }
+        print("ℹ️ No routines in any time type")
     }
 
     // MARK: - Move Routine

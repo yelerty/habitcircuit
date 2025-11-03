@@ -1,6 +1,6 @@
 import Foundation
 
-struct RoutineItem: Identifiable {
+struct RoutineItem: Identifiable, Codable {
     let id: UUID
     var name: String
     var order: Int

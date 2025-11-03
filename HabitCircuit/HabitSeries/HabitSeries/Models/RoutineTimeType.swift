@@ -1,6 +1,6 @@
 import Foundation
 
-enum RoutineTimeType: String, CaseIterable {
+enum RoutineTimeType: String, CaseIterable, Codable {
     case morning = "아침"
     case afternoon = "점심"
     case evening = "저녁"

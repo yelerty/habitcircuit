@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var exportedFileURL: URL?
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var showSavedRoutines = false
 
     var body: some View {
         NavigationView {
@@ -76,6 +77,19 @@ struct SettingsView: View {
                 // Data Management Section
                 Section {
                     Button(action: {
+                        showSavedRoutines = true
+                    }) {
+                        HStack {
+                            Label("저장된 루틴 관리", systemImage: "folder.badge.gearshape")
+                                .foregroundColor(.orange)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+
+                    Button(action: {
                         exportRoutines()
                     }) {
                         HStack {
@@ -94,10 +108,23 @@ struct SettingsView: View {
                             Spacer()
                         }
                     }
+
+                    Button(action: {
+                        openWebSharing()
+                    }) {
+                        HStack {
+                            Label("웹에서 공유하기", systemImage: "globe")
+                                .foregroundColor(.purple)
+                            Spacer()
+                            Image(systemName: "arrow.up.forward")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
                 } header: {
                     Label("데이터 관리", systemImage: "folder.fill")
                 } footer: {
-                    Text("루틴을 JSON 파일로 내보내거나 파일에서 가져올 수 있습니다")
+                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.")
                 }
 
                 // App Info Section
@@ -128,6 +155,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showImportSheet) {
                 DocumentPicker(completion: handleImport)
+            }
+            .sheet(isPresented: $showSavedRoutines) {
+                SavedRoutinesView(viewModel: viewModel)
             }
             .alert("알림", isPresented: $showAlert) {
                 Button("확인", role: .cancel) {}
@@ -177,6 +207,13 @@ struct SettingsView: View {
         case .failure(let error):
             alertMessage = "파일 선택 중 오류가 발생했습니다: \(error.localizedDescription)"
             showAlert = true
+        }
+    }
+
+    // MARK: - Open Web Sharing
+    private func openWebSharing() {
+        if let url = URL(string: "https://yelerty.github.io/habitcircuitpage/") {
+            UIApplication.shared.open(url)
         }
     }
 }
