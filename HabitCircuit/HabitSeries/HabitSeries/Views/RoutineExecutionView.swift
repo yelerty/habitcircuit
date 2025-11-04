@@ -7,10 +7,32 @@ struct RoutineExecutionView: View {
     @State private var showCompletionView = false
     @State private var rectangleOffset: CGSize = .zero
     @State private var currentCorner: Int = 0
+    @State private var showTransitionView = false
+    @State private var nextTimeType: RoutineTimeType?
+    @State private var showSparkle = false
 
     var body: some View {
         ZStack {
-            if viewModel.allRoutinesCompleted || showCompletionView {
+            if showTransitionView, let nextTimeType = nextTimeType {
+                TransitionView(
+                    timeType: nextTimeType,
+                    onContinue: {
+                        viewModel.changeTimeType(nextTimeType)
+                        showTransitionView = false
+                        self.nextTimeType = nil
+                    },
+                    onFinish: {
+                        // Only show completion if ALL day's routines are done
+                        if viewModel.allDayRoutinesCompleted {
+                            showCompletionView = true
+                        } else {
+                            // User chose to finish, but not all routines completed
+                            isPresented = false
+                        }
+                        showTransitionView = false
+                    }
+                )
+            } else if viewModel.allDayRoutinesCompleted || showCompletionView {
                 CompletionView(
                     viewModel: viewModel,
                     isPresented: $isPresented
@@ -104,31 +126,60 @@ struct RoutineExecutionView: View {
 
                     // Complete Button - Small and Dark
                     if let _ = viewModel.currentRoutine {
-                        Button(action: {
-                            withAnimation {
-                                viewModel.completeCurrentRoutine()
+                        ZStack {
+                            Button(action: {
+                                // Haptic feedback
+                                let generator = UINotificationFeedbackGenerator()
+                                generator.notificationOccurred(.success)
 
-                                // Check if all completed
-                                if viewModel.allRoutinesCompleted {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        showCompletionView = true
+                                // Sparkle effect
+                                showSparkle = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    showSparkle = false
+                                }
+
+                                withAnimation {
+                                    viewModel.completeCurrentRoutine()
+
+                                    // Check if current time type is completed
+                                    if viewModel.allRoutinesCompleted {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            // Check if ALL day's routines are completed (not just current time type)
+                                            if viewModel.allDayRoutinesCompleted {
+                                                print("✅ All routines for the entire day completed!")
+                                                showCompletionView = true
+                                            } else if let next = viewModel.getNextIncompleteTimeType() {
+                                                // There are more time types to complete
+                                                print("🔄 Current time type completed, transitioning to \(next.rawValue)")
+                                                nextTimeType = next
+                                                showTransitionView = true
+                                            } else {
+                                                // Current time type done, but there might be incomplete routines in previous time types
+                                                print("⚠️ Current time type completed, but some routines remain incomplete")
+                                                showCompletionView = false
+                                                isPresented = false
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "checkmark.circle")
-                                    .font(.caption)
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.circle")
+                                        .font(.caption)
 
-                                Text("완료")
-                                    .font(.caption)
+                                    Text("완료")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.white.opacity(0.4))
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 12)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(20)
                             }
-                            .foregroundColor(.white.opacity(0.4))
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(20)
-                            .contentShape(Rectangle())
+                            .scaleButton()
+
+                            SparkleEffect(isActive: showSparkle)
+                                .frame(width: 100, height: 100)
                         }
                         .frame(minWidth: 80, minHeight: 44)
                         .padding(.bottom, 40)
@@ -139,9 +190,6 @@ struct RoutineExecutionView: View {
     }
 
     private func moveToNextCorner(screenSize: CGSize) {
-        let rectWidth: CGFloat = 300
-        let rectHeight: CGFloat = 400
-
         // Calculate center position
         let centerX = screenSize.width / 2
         let centerY = screenSize.height / 2
@@ -270,6 +318,8 @@ struct CompletionView: View {
 
             // Close Button
             Button(action: {
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
                 isPresented = false
             }) {
                 Text("완료")
@@ -280,6 +330,8 @@ struct CompletionView: View {
                     .background(Color.green)
                     .cornerRadius(15)
             }
+            .scaleButton()
+            .glowEffect(color: .green, radius: 10)
             .padding()
         }
         .background(Color(.systemBackground))
@@ -307,6 +359,113 @@ struct CompletionView: View {
             impact.impactOccurred()
         }
     }
+    }
+}
+
+// MARK: - Transition View
+struct TransitionView: View {
+    let timeType: RoutineTimeType
+    let onContinue: () -> Void
+    let onFinish: () -> Void
+
+    @State private var scale: CGFloat = 0.5
+    @State private var opacity: Double = 0
+
+    private var timeTypeIcon: String {
+        switch timeType {
+        case .morning: return "sunrise.fill"
+        case .afternoon: return "sun.max.fill"
+        case .evening: return "moon.stars.fill"
+        }
+    }
+
+    private var timeTypeColor: Color {
+        switch timeType {
+        case .morning: return .orange
+        case .afternoon: return .yellow
+        case .evening: return .indigo
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            // Dark background
+            Color.black.ignoresSafeArea()
+
+            VStack(spacing: 40) {
+                Spacer()
+
+                // Time type icon with animation
+                ZStack {
+                    Circle()
+                        .fill(timeTypeColor.opacity(0.2))
+                        .frame(width: 150, height: 150)
+
+                    Image(systemName: timeTypeIcon)
+                        .font(.system(size: 60))
+                        .foregroundColor(timeTypeColor)
+                }
+                .scaleEffect(scale)
+                .opacity(opacity)
+
+                VStack(spacing: 16) {
+                    Text("\(timeType.rawValue) 루틴 완료!")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+
+                    Text("다음 시간대로 이동하시겠습니까?")
+                        .font(.body)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                .opacity(opacity)
+
+                Spacer()
+
+                // Action buttons
+                VStack(spacing: 16) {
+                    Button(action: {
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
+                        onContinue()
+                    }) {
+                        Text("계속하기")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(timeTypeColor)
+                            .cornerRadius(12)
+                    }
+                    .scaleButton()
+                    .glowEffect(color: timeTypeColor, radius: 8)
+
+                    Button(action: {
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                        onFinish()
+                    }) {
+                        Text("오늘은 여기까지")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(12)
+                    }
+                    .scaleButton()
+                }
+                .padding(.horizontal, 40)
+                .padding(.bottom, 40)
+                .opacity(opacity)
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.6)) {
+                scale = 1.0
+                opacity = 1.0
+            }
+        }
     }
 }
 

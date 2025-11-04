@@ -21,7 +21,11 @@ struct ContentView: View {
         NavigationView {
             HomeView(viewModel: viewModel, showEditScreen: $showEditScreen)
         }
-        .sheet(isPresented: $showEditScreen) {
+        .sheet(isPresented: $showEditScreen, onDismiss: {
+            // Reload data when edit screen is dismissed
+            viewModel.loadRoutines()
+            viewModel.loadAllRoutines()
+        }) {
             RoutineEditView(viewModel: viewModel)
         }
     }

@@ -6,6 +6,7 @@ struct SettingsView: View {
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var streakManager = StreakManager.shared
     @StateObject private var viewModel = RoutineViewModel(context: PersistenceController.shared.container.viewContext)
+    @StateObject private var timeSlotManager = TimeSlotManager.shared
 
     @State private var showExportSheet = false
     @State private var showImportSheet = false
@@ -13,6 +14,7 @@ struct SettingsView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var showSavedRoutines = false
+    @State private var showTimeGuide = false
 
     var body: some View {
         NavigationView {
@@ -127,8 +129,52 @@ struct SettingsView: View {
                     Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.")
                 }
 
+                // Time Slot Info Section
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TimeSlotSummaryRow(
+                            icon: "sunrise.fill",
+                            color: .orange,
+                            title: "아침",
+                            timeRange: timeSlotManager.getTimeRangeString(for: .morning)
+                        )
+
+                        TimeSlotSummaryRow(
+                            icon: "sun.max.fill",
+                            color: .yellow,
+                            title: "점심",
+                            timeRange: timeSlotManager.getTimeRangeString(for: .afternoon)
+                        )
+
+                        TimeSlotSummaryRow(
+                            icon: "moon.stars.fill",
+                            color: .indigo,
+                            title: "저녁",
+                            timeRange: timeSlotManager.getTimeRangeString(for: .evening)
+                        )
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Label("루틴 시간대", systemImage: "clock.fill")
+                } footer: {
+                    Text("각 루틴은 알림 시간의 1시간 전부터 3시간 후까지 실행할 수 있습니다.\n알림 시간을 변경하면 실행 가능한 시간대가 자동으로 조정됩니다.")
+                }
+
                 // App Info Section
                 Section {
+                    Button(action: {
+                        showTimeGuide = true
+                    }) {
+                        HStack {
+                            Label("루틴 실행 시간 안내", systemImage: "clock.fill")
+                                .foregroundColor(.blue)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+
                     HStack {
                         Label("버전", systemImage: "info.circle")
                         Spacer()
@@ -158,6 +204,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showSavedRoutines) {
                 SavedRoutinesView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showTimeGuide) {
+                TimeGuideView(isPresented: $showTimeGuide)
             }
             .alert("알림", isPresented: $showAlert) {
                 Button("확인", role: .cancel) {}
@@ -266,6 +315,32 @@ struct NotificationTimeRow: View {
                 // Permission denied - disable toggle
                 isEnabled = false
             }
+        }
+    }
+}
+
+struct TimeSlotSummaryRow: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let timeRange: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .font(.body)
+                .frame(width: 24)
+
+            Text(title)
+                .font(.body)
+                .frame(width: 40, alignment: .leading)
+
+            Text(timeRange)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Spacer()
         }
     }
 }

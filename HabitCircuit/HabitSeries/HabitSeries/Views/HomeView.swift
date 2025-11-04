@@ -5,6 +5,9 @@ struct HomeView: View {
     @Binding var showEditScreen: Bool
     @State private var showExecutionScreen = false
     @State private var showSettings = false
+    @State private var showTimeGuide = false
+    @State private var showTimeRestrictionAlert = false
+    @State private var timeRestrictionMessage = ""
     @StateObject private var streakManager = StreakManager.shared
 
     private var navigationTitle: String {
@@ -20,7 +23,9 @@ struct HomeView: View {
             // Day Selector
             DaySelectorView(selectedDay: $viewModel.selectedDay)
                 .onChange(of: viewModel.selectedDay) { oldValue, newValue in
-                    viewModel.changeDay(newValue)
+                    print("🎯 HomeView - selectedDay changed from \(oldValue.rawValue) to \(newValue.rawValue)")
+                    viewModel.loadRoutines()
+                    viewModel.loadAllRoutines()
                 }
                 .padding(.vertical)
 
@@ -39,14 +44,22 @@ struct HomeView: View {
                     }
                     .padding()
                 }
+                .id(viewModel.allRoutines.count)
 
                 // Start Button
                 if viewModel.selectedDay == .today {
+                    let canStartNow = viewModel.getCurrentTimeType() != nil
+
                     Button(action: {
+                        guard canStartNow else { return }
+
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
+
                         if viewModel.allRoutinesCompleted {
                             viewModel.resetDailyRoutines()
                         } else {
-                            showExecutionScreen = true
+                            startRoutine()
                         }
                     }) {
                         Text(viewModel.allRoutinesCompleted ? "다시 시작" : "루틴 시작")
@@ -54,14 +67,25 @@ struct HomeView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(viewModel.allRoutinesCompleted ? Color.green : Color.blue)
+                            .background(canStartNow ? (viewModel.allRoutinesCompleted ? Color.green : Color.blue) : Color.gray)
                             .cornerRadius(12)
                     }
+                    .scaleButton()
+                    .allowsHitTesting(canStartNow)
+                    .opacity(canStartNow ? 1.0 : 0.5)
+                    .glowEffect(color: canStartNow ? (viewModel.allRoutinesCompleted ? .green : .blue) : .clear, radius: canStartNow ? 8 : 0)
                     .padding()
+
+                    if !canStartNow {
+                        Text("현재는 루틴 실행 시간이 아닙니다")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding(.top, -8)
+                    }
                 } else {
                     // Disabled state for past/future days
                     VStack(spacing: 8) {
-                        Text(viewModel.selectedDay == .today ? "루틴 시작" : "오늘만 루틴을 시작할 수 있습니다")
+                        Text("오늘만 루틴을 시작할 수 있습니다")
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -88,6 +112,8 @@ struct HomeView: View {
                         .multilineTextAlignment(.center)
 
                     Button(action: {
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
                         showEditScreen = true
                     }) {
                         Text("루틴 추가하기")
@@ -98,6 +124,8 @@ struct HomeView: View {
                             .background(Color.blue)
                             .cornerRadius(12)
                     }
+                    .scaleButton()
+                    .glowEffect(color: .blue, radius: 8)
                 }
                 .frame(maxHeight: .infinity)
             }
@@ -140,7 +168,11 @@ struct HomeView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showExecutionScreen) {
+        .fullScreenCover(isPresented: $showExecutionScreen, onDismiss: {
+            // Reload data when execution screen is dismissed
+            viewModel.loadRoutines()
+            viewModel.loadAllRoutines()
+        }) {
             RoutineExecutionView(viewModel: viewModel, isPresented: $showExecutionScreen)
         }
         .sheet(isPresented: $showSettings) {
@@ -163,9 +195,63 @@ struct HomeView: View {
                 }
         )
         .onAppear {
+            // Reload routines data to ensure it's up to date
+            viewModel.loadRoutines()
+            viewModel.loadAllRoutines()
+
             // Check streak status on app launch
             streakManager.checkStreakStatus()
+
+            // Show time guide on first launch
+            let hasShownGuide = UserDefaults.standard.bool(forKey: "hasShownTimeGuide")
+            if !hasShownGuide {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showTimeGuide = true
+                    UserDefaults.standard.set(true, forKey: "hasShownTimeGuide")
+                }
+            }
         }
+        .overlay(
+            Group {
+                if showTimeGuide {
+                    TimeGuideView(isPresented: $showTimeGuide)
+                }
+            }
+        )
+        .alert("시간 제한", isPresented: $showTimeRestrictionAlert) {
+            Button("확인", role: .cancel) {}
+            Button("시간 안내 보기") {
+                showTimeGuide = true
+            }
+        } message: {
+            Text(timeRestrictionMessage)
+        }
+    }
+
+    // MARK: - Helper Functions
+    private func startRoutine() {
+        // Get current appropriate time type
+        guard let currentTimeType = viewModel.getCurrentTimeType() else {
+            timeRestrictionMessage = "현재 시간에는 루틴을 실행할 수 없습니다. (오전 3시 이후부터 가능)"
+            showTimeRestrictionAlert = true
+            return
+        }
+
+        // Check if user can execute current time type
+        let (canExecute, message) = viewModel.canExecuteRoutine(for: currentTimeType)
+        if !canExecute {
+            timeRestrictionMessage = message
+            showTimeRestrictionAlert = true
+            return
+        }
+
+        // Switch to appropriate time type
+        if viewModel.selectedTimeType != currentTimeType {
+            viewModel.changeTimeType(currentTimeType)
+        }
+
+        // Start execution
+        showExecutionScreen = true
     }
 }
 
@@ -231,7 +317,11 @@ struct DaySelectorView: View {
                 HStack(spacing: 12) {
                     ForEach(DayOfWeek.allCases, id: \.self) { day in
                         Button(action: {
-                            selectedDay = day
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selectedDay = day
+                            }
                         }) {
                             VStack(spacing: 4) {
                                 Text(day.shortName)
@@ -250,6 +340,7 @@ struct DaySelectorView: View {
                                     .fill(selectedDay == day ? Color.blue : Color.gray.opacity(0.1))
                             )
                         }
+                        .bouncyButton()
                         .id(day)
                     }
                 }

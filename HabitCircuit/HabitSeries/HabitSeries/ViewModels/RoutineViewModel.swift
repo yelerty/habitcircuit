@@ -28,9 +28,9 @@ class RoutineViewModel: ObservableObject {
 
         do {
             let results = try viewContext.fetch(request)
-            print("📥 loadRoutines - Fetched \(results.count) routines from DB")
+            print("📥 loadRoutines - Fetched \(results.count) routines from DB for \(selectedDay.rawValue) \(selectedTimeType.rawValue)")
 
-            routines = results.map { routine in
+            let newRoutines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
                 return RoutineItem(
                     id: routine.id ?? UUID(),
@@ -41,8 +41,12 @@ class RoutineViewModel: ObservableObject {
                     isCompleted: routine.isCompleted
                 )
             }
-            updateCurrentRoutineIndex()
-            print("✅ loadRoutines - Updated routines to \(routines.count) items")
+
+            DispatchQueue.main.async {
+                self.routines = newRoutines
+                self.updateCurrentRoutineIndex()
+                print("✅ loadRoutines - Updated routines to \(self.routines.count) items on main thread")
+            }
         } catch {
             print("❌ Error fetching routines: \(error)")
         }
@@ -59,9 +63,9 @@ class RoutineViewModel: ObservableObject {
 
         do {
             let results = try viewContext.fetch(request)
-            print("📥 loadAllRoutines - Fetched \(results.count) routines from DB")
+            print("📥 loadAllRoutines - Fetched \(results.count) routines from DB for \(selectedDay.rawValue)")
 
-            allRoutines = results.map { routine in
+            let newAllRoutines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
                 return RoutineItem(
                     id: routine.id ?? UUID(),
@@ -72,7 +76,11 @@ class RoutineViewModel: ObservableObject {
                     isCompleted: routine.isCompleted
                 )
             }
-            print("✅ loadAllRoutines - Updated allRoutines to \(allRoutines.count) items")
+
+            DispatchQueue.main.async {
+                self.allRoutines = newAllRoutines
+                print("✅ loadAllRoutines - Updated allRoutines to \(self.allRoutines.count) items on main thread")
+            }
         } catch {
             print("❌ Error fetching all routines: \(error)")
         }
@@ -134,24 +142,17 @@ class RoutineViewModel: ObservableObject {
         saveContext()
         print("💾 Context saved after deletion")
 
-        // Refresh the context to ensure we get fresh data
-        viewContext.refreshAllObjects()
-        print("🔄 Context refreshed")
-
-        // Load routines first to update the in-memory array before reordering
+        // Load routines to get fresh data
         loadRoutines()
-        print("📊 After first load - routines count: \(routines.count)")
+        print("📊 After delete load - routines count: \(routines.count)")
 
         loadAllRoutines()
-        print("📊 After first load - allRoutines count: \(allRoutines.count)")
+        print("📊 After delete load - allRoutines count: \(allRoutines.count)")
 
         // Reorder if there are remaining routines
         if !routines.isEmpty {
             print("🔢 Reordering \(routines.count) routines")
             reorderRoutines()
-
-            // Refresh again after reordering
-            viewContext.refreshAllObjects()
 
             // Reload after reordering to ensure UI is in sync
             loadRoutines()
@@ -200,6 +201,7 @@ class RoutineViewModel: ObservableObject {
                 routine.name = newName
                 saveContext()
                 loadRoutines()
+                loadAllRoutines()
             }
         } catch {
             print("Error updating routine: \(error)")
@@ -284,11 +286,79 @@ class RoutineViewModel: ObservableObject {
 
     // MARK: - Computed Properties
     var hasRoutines: Bool {
-        !routines.isEmpty
+        !allRoutines.isEmpty
     }
 
     var allRoutinesCompleted: Bool {
         !routines.isEmpty && routines.allSatisfy { $0.isCompleted }
+    }
+
+    // Check if all routines for the entire day are completed
+    var allDayRoutinesCompleted: Bool {
+        // Check if ALL routines for the selected day are completed
+        // This includes morning, afternoon, and evening routines
+        guard !allRoutines.isEmpty else { return false }
+
+        // Must verify all routines across all time types are completed
+        let request = NSFetchRequest<Routine>(entityName: "Routine")
+        request.predicate = NSPredicate(format: "dayOfWeek == %@", selectedDay.rawValue)
+
+        do {
+            let allDayRoutines = try viewContext.fetch(request)
+
+            // If there are no routines at all, return false
+            guard !allDayRoutines.isEmpty else { return false }
+
+            // All routines must be completed
+            return allDayRoutines.allSatisfy { $0.isCompleted }
+        } catch {
+            print("Error checking all day routines completion: \(error)")
+            return false
+        }
+    }
+
+    // Get next time type with incomplete routines
+    func getNextIncompleteTimeType() -> RoutineTimeType? {
+        let currentIndex = RoutineTimeType.allCases.firstIndex(of: selectedTimeType) ?? 0
+
+        // Check time types after current one
+        for i in (currentIndex + 1)..<RoutineTimeType.allCases.count {
+            let timeType = RoutineTimeType.allCases[i]
+            let count = getRoutineCount(for: timeType)
+            if count > 0 {
+                // Check if this time type has incomplete routines
+                let request = NSFetchRequest<Routine>(entityName: "Routine")
+                request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@ AND isCompleted == NO", selectedDay.rawValue, timeType.rawValue)
+
+                do {
+                    let incompleteCount = try viewContext.count(for: request)
+                    if incompleteCount > 0 {
+                        return timeType
+                    }
+                } catch {
+                    print("Error checking incomplete routines: \(error)")
+                }
+            }
+        }
+
+        return nil
+    }
+
+    // MARK: - Time Restrictions
+    func canExecuteRoutine(for timeType: RoutineTimeType) -> (Bool, String) {
+        return TimeSlotManager.shared.canExecute(timeType: timeType)
+    }
+
+    // Get available time types at current time
+    func getAvailableTimeTypes() -> [RoutineTimeType] {
+        RoutineTimeType.allCases.filter { timeType in
+            canExecuteRoutine(for: timeType).0
+        }
+    }
+
+    // Get current appropriate time type
+    func getCurrentTimeType() -> RoutineTimeType? {
+        return TimeSlotManager.shared.getCurrentTimeType()
     }
 
     var currentRoutine: RoutineItem? {
@@ -308,12 +378,14 @@ class RoutineViewModel: ObservableObject {
     }
 
     func changeDay(_ day: DayOfWeek) {
+        print("🔄 changeDay called: \(selectedDay.rawValue) -> \(day.rawValue)")
         selectedDay = day
         loadRoutines()
         loadAllRoutines()
     }
 
     func changeTimeType(_ timeType: RoutineTimeType) {
+        print("🔄 changeTimeType called: \(selectedTimeType.rawValue) -> \(timeType.rawValue)")
         selectedTimeType = timeType
         loadRoutines()
     }

@@ -16,6 +16,8 @@ struct RoutineEditView: View {
                 HStack(spacing: 12) {
                     ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
                         Button(action: {
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
                             viewModel.changeTimeType(timeType)
                         }) {
                             HStack(spacing: 6) {
@@ -32,6 +34,7 @@ struct RoutineEditView: View {
                                     .fill(viewModel.selectedTimeType == timeType ? timeTypeColor(timeType) : Color.gray.opacity(0.1))
                             )
                         }
+                        .bouncyButton()
                     }
                 }
                 .padding()
@@ -48,12 +51,17 @@ struct RoutineEditView: View {
                                 addRoutine()
                             }
 
-                        Button(action: addRoutine) {
+                        Button(action: {
+                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                            generator.impactOccurred()
+                            addRoutine()
+                        }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(timeTypeColor(viewModel.selectedTimeType))
                         }
                         .disabled(newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .pressEffect()
                     }
 
                     HStack {
@@ -64,6 +72,8 @@ struct RoutineEditView: View {
                         Spacer()
 
                         Button(action: {
+                            let generator = UIImpactFeedbackGenerator(style: .light)
+                            generator.impactOccurred()
                             showDefaultRoutines = true
                         }) {
                             HStack(spacing: 4) {
@@ -74,6 +84,7 @@ struct RoutineEditView: View {
                             }
                             .foregroundColor(.orange)
                         }
+                        .bouncyButton()
                     }
                 }
                 .padding()
@@ -110,14 +121,20 @@ struct RoutineEditView: View {
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
 
                                     Button("저장") {
+                                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                                        generator.impactOccurred()
                                         saveEdit()
                                     }
                                     .foregroundColor(.blue)
+                                    .buttonStyle(BorderlessButtonStyle())
 
                                     Button("취소") {
+                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        generator.impactOccurred()
                                         cancelEdit()
                                     }
                                     .foregroundColor(.red)
+                                    .buttonStyle(BorderlessButtonStyle())
                                 }
                             } else {
                                 HStack {
@@ -134,10 +151,13 @@ struct RoutineEditView: View {
                                     Spacer()
 
                                     Button(action: {
+                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        generator.impactOccurred()
                                         startEditing(routine: routine)
                                     }) {
                                         Image(systemName: "pencil")
                                             .foregroundColor(.blue)
+                                            .padding(8)
                                     }
                                     .buttonStyle(BorderlessButtonStyle())
                                 }
@@ -147,6 +167,7 @@ struct RoutineEditView: View {
                         .onMove(perform: moveRoutine)
                     }
                     .listStyle(PlainListStyle())
+                    .id(viewModel.routines.map { $0.id })
                 }
             }
             .navigationTitle("\(viewModel.selectedDay.rawValue) 루틴")
@@ -154,6 +175,8 @@ struct RoutineEditView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("완료") {
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
                         dismiss()
                     }
                 }
@@ -180,7 +203,10 @@ struct RoutineEditView: View {
     }
 
     private func deleteRoutine(at offsets: IndexSet) {
+        print("🎯 RoutineEditView - deleteRoutine called with offsets: \(offsets)")
+        print("🎯 Before delete - viewModel.routines.count: \(viewModel.routines.count)")
         viewModel.deleteRoutine(at: offsets)
+        print("🎯 After delete - viewModel.routines.count: \(viewModel.routines.count)")
     }
 
     private func moveRoutine(from source: IndexSet, to destination: Int) {
@@ -196,10 +222,14 @@ struct RoutineEditView: View {
         guard let routine = editingRoutine else { return }
         let trimmedName = editingText.trimmingCharacters(in: .whitespaces)
 
+        print("🎯 RoutineEditView - saveEdit called")
+        print("🎯 Before update - viewModel.routines.count: \(viewModel.routines.count)")
+
         if !trimmedName.isEmpty {
             viewModel.updateRoutine(id: routine.id, newName: trimmedName)
         }
 
+        print("🎯 After update - viewModel.routines.count: \(viewModel.routines.count)")
         cancelEdit()
     }
 
@@ -238,12 +268,17 @@ struct DefaultRoutinesSheet: View {
                                 addCustomRoutine()
                             }
 
-                        Button(action: addCustomRoutine) {
+                        Button(action: {
+                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                            generator.impactOccurred()
+                            addCustomRoutine()
+                        }) {
                             Image(systemName: "plus.circle.fill")
                                 .font(.title2)
                                 .foregroundColor(.green)
                         }
                         .disabled(newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .pressEffect()
                     }
 
                     Text("자주 사용하는 루틴을 추가하여 관리하세요")
@@ -283,6 +318,8 @@ struct DefaultRoutinesSheet: View {
                                     ForEach(Array(defaultRoutines.customRoutines.enumerated()), id: \.element) { index, routine in
                                         HStack {
                                             Button(action: {
+                                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                                generator.impactOccurred()
                                                 onSelect(routine)
                                             }) {
                                                 HStack {
@@ -297,8 +334,11 @@ struct DefaultRoutinesSheet: View {
                                                     Spacer()
                                                 }
                                             }
+                                            .bouncyButton()
 
                                             Button(action: {
+                                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                                generator.impactOccurred()
                                                 defaultRoutines.deleteCustomRoutine(at: index)
                                             }) {
                                                 Image(systemName: "xmark.circle.fill")
@@ -306,6 +346,7 @@ struct DefaultRoutinesSheet: View {
                                                     .font(.caption)
                                             }
                                             .buttonStyle(BorderlessButtonStyle())
+                                            .pressEffect()
                                         }
                                         .padding()
                                         .background(
@@ -339,6 +380,8 @@ struct DefaultRoutinesSheet: View {
                             ], spacing: 12) {
                                 ForEach(DefaultRoutines.builtInExamples, id: \.self) { routine in
                                     Button(action: {
+                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        generator.impactOccurred()
                                         onSelect(routine)
                                     }) {
                                         HStack {
@@ -358,6 +401,7 @@ struct DefaultRoutinesSheet: View {
                                                 .fill(Color.blue.opacity(0.1))
                                         )
                                     }
+                                    .bouncyButton()
                                 }
                             }
                             .padding(.horizontal)
@@ -371,6 +415,8 @@ struct DefaultRoutinesSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("닫기") {
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
                         dismiss()
                     }
                 }
