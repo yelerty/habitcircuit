@@ -7,13 +7,15 @@ struct RoutineItem: Identifiable, Codable {
     var dayOfWeek: String
     var timeType: RoutineTimeType
     var isCompleted: Bool
+    var category: RoutineCategory
 
-    init(id: UUID = UUID(), name: String, order: Int, dayOfWeek: String, timeType: RoutineTimeType = .morning, isCompleted: Bool = false) {
+    init(id: UUID = UUID(), name: String, order: Int, dayOfWeek: String, timeType: RoutineTimeType = .morning, isCompleted: Bool = false, category: RoutineCategory = .other) {
         self.id = id
         self.name = name
         self.order = order
         self.dayOfWeek = dayOfWeek
         self.timeType = timeType
         self.isCompleted = isCompleted
+        self.category = category
     }
 }

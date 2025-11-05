@@ -10,6 +10,7 @@ struct RoutineExecutionView: View {
     @State private var showTransitionView = false
     @State private var nextTimeType: RoutineTimeType?
     @State private var showSparkle = false
+    @State private var showExitConfirmation = false
 
     var body: some View {
         ZStack {
@@ -65,21 +66,30 @@ struct RoutineExecutionView: View {
                     // Header with Close Button
                     HStack {
                         Button(action: {
-                            isPresented = false
+                            showExitConfirmation = true
                         }) {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.title2)
-                                .foregroundColor(.white.opacity(0.6))
+                                .font(.title)
+                                .foregroundColor(.white.opacity(0.9))
                                 .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
 
                         Spacer()
 
-                        // Minimal progress indicator
-                        Text(viewModel.progressText)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.5))
+                        // Enhanced progress indicator
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("현재: \(viewModel.progressText)")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.7))
+
+                            if viewModel.allRoutines.count > 0 {
+                                let totalCompleted = viewModel.allRoutines.filter { $0.isCompleted }.count
+                                Text("전체: \(totalCompleted)/\(viewModel.allRoutines.count)")
+                                    .font(.caption2)
+                                    .foregroundColor(.white.opacity(0.5))
+                            }
+                        }
                     }
                     .padding()
 
@@ -186,6 +196,14 @@ struct RoutineExecutionView: View {
                     }
                 }
             }
+        }
+        .alert("루틴 종료", isPresented: $showExitConfirmation) {
+            Button("계속하기", role: .cancel) { }
+            Button("종료", role: .destructive) {
+                isPresented = false
+            }
+        } message: {
+            Text("루틴 실행을 종료하시겠습니까?\n진행 상황은 저장됩니다.")
         }
     }
 

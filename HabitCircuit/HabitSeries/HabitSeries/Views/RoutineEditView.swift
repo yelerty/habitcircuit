@@ -8,6 +8,13 @@ struct RoutineEditView: View {
     @State private var editingRoutine: RoutineItem?
     @State private var editingText: String = ""
     @State private var showDefaultRoutines = false
+    @State private var showDeleteConfirmation = false
+    @State private var routineToDelete: IndexSet?
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    @State private var toastType: ToastView.ToastType = .success
+    @State private var selectedCategory: RoutineCategory = .other
+    @State private var showCategoryPicker = false
 
     var body: some View {
         NavigationView {
@@ -15,16 +22,27 @@ struct RoutineEditView: View {
                 // Time Type Selector for Edit
                 HStack(spacing: 12) {
                     ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
+                        let routineCount = viewModel.getRoutineCount(for: timeType)
+
                         Button(action: {
                             let generator = UIImpactFeedbackGenerator(style: .light)
                             generator.impactOccurred()
                             viewModel.changeTimeType(timeType)
                         }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: timeType.icon)
-                                    .font(.caption)
-                                Text(timeType.rawValue)
-                                    .font(.system(size: 13, weight: .medium))
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: timeType.icon)
+                                        .font(.caption)
+                                    Text(timeType.rawValue)
+                                        .font(.system(size: 13, weight: .medium))
+                                }
+
+                                // Routine count badge
+                                if routineCount > 0 {
+                                    Text("\(routineCount)개")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(viewModel.selectedTimeType == timeType ? .white.opacity(0.8) : timeTypeColor(timeType))
+                                }
                             }
                             .foregroundColor(viewModel.selectedTimeType == timeType ? .white : .primary)
                             .padding(.horizontal, 12)
@@ -32,6 +50,10 @@ struct RoutineEditView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(viewModel.selectedTimeType == timeType ? timeTypeColor(timeType) : Color.gray.opacity(0.1))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(viewModel.selectedTimeType == timeType ? timeTypeColor(timeType).opacity(0.5) : Color.clear, lineWidth: 2)
                             )
                         }
                         .bouncyButton()
@@ -44,6 +66,33 @@ struct RoutineEditView: View {
 
                 // Add Routine Section
                 VStack(spacing: 12) {
+                    // Category Selector
+                    Button(action: {
+                        showCategoryPicker.toggle()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: selectedCategory.icon)
+                                .foregroundColor(selectedCategory.color)
+                            Text(selectedCategory.rawValue)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(selectedCategory.color.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(selectedCategory.color.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+
                     HStack {
                         TextField("새 루틴 추가", text: $newRoutineName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -62,6 +111,36 @@ struct RoutineEditView: View {
                         }
                         .disabled(newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty)
                         .pressEffect()
+                    }
+
+                    if showCategoryPicker {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(RoutineCategory.allCases, id: \.self) { category in
+                                    Button(action: {
+                                        selectedCategory = category
+                                        showCategoryPicker = false
+                                    }) {
+                                        VStack(spacing: 4) {
+                                            Image(systemName: category.icon)
+                                                .font(.title3)
+                                                .foregroundColor(selectedCategory == category ? .white : category.color)
+                                            Text(category.rawValue)
+                                                .font(.caption2)
+                                                .foregroundColor(selectedCategory == category ? .white : .primary)
+                                        }
+                                        .frame(width: 70, height: 70)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(selectedCategory == category ? category.color : category.color.opacity(0.1))
+                                        )
+                                    }
+                                    .bouncyButton()
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                        .transition(.opacity)
                     }
 
                     HStack {
@@ -145,6 +224,12 @@ struct RoutineEditView: View {
                                         .foregroundColor(.gray)
                                         .frame(width: 30)
 
+                                    // Category icon
+                                    Image(systemName: routine.category.icon)
+                                        .foregroundColor(routine.category.color)
+                                        .font(.caption)
+                                        .frame(width: 24)
+
                                     Text(routine.name)
                                         .font(.body)
 
@@ -189,8 +274,22 @@ struct RoutineEditView: View {
             .sheet(isPresented: $showDefaultRoutines) {
                 DefaultRoutinesSheet(onSelect: { routineName in
                     viewModel.addRoutine(name: routineName)
+                    showSuccessToast("루틴이 추가되었습니다")
                 })
             }
+            .alert("루틴 삭제", isPresented: $showDeleteConfirmation) {
+                Button("취소", role: .cancel) {
+                    routineToDelete = nil
+                }
+                Button("삭제", role: .destructive) {
+                    if let offsets = routineToDelete {
+                        performDelete(at: offsets)
+                    }
+                }
+            } message: {
+                Text("이 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.")
+            }
+            .toast(isShowing: $showToast, message: toastMessage, type: toastType)
         }
     }
 
@@ -198,15 +297,30 @@ struct RoutineEditView: View {
         let trimmedName = newRoutineName.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { return }
 
-        viewModel.addRoutine(name: trimmedName)
+        viewModel.addRoutine(name: trimmedName, category: selectedCategory)
         newRoutineName = ""
+
+        // Show success toast
+        showSuccessToast("'\(trimmedName)' 루틴이 추가되었습니다")
     }
 
     private func deleteRoutine(at offsets: IndexSet) {
+        routineToDelete = offsets
+        showDeleteConfirmation = true
+    }
+
+    private func performDelete(at offsets: IndexSet) {
         print("🎯 RoutineEditView - deleteRoutine called with offsets: \(offsets)")
         print("🎯 Before delete - viewModel.routines.count: \(viewModel.routines.count)")
+
+        let routineNames = offsets.map { viewModel.routines[$0].name }.joined(separator: ", ")
+
         viewModel.deleteRoutine(at: offsets)
         print("🎯 After delete - viewModel.routines.count: \(viewModel.routines.count)")
+
+        // Show success toast
+        showSuccessToast("'\(routineNames)' 루틴이 삭제되었습니다")
+        routineToDelete = nil
     }
 
     private func moveRoutine(from source: IndexSet, to destination: Int) {
@@ -227,6 +341,7 @@ struct RoutineEditView: View {
 
         if !trimmedName.isEmpty {
             viewModel.updateRoutine(id: routine.id, newName: trimmedName)
+            showSuccessToast("루틴이 수정되었습니다")
         }
 
         print("🎯 After update - viewModel.routines.count: \(viewModel.routines.count)")
@@ -236,6 +351,18 @@ struct RoutineEditView: View {
     private func cancelEdit() {
         editingRoutine = nil
         editingText = ""
+    }
+
+    private func showSuccessToast(_ message: String) {
+        toastMessage = message
+        toastType = .success
+        showToast = true
+    }
+
+    private func showErrorToast(_ message: String) {
+        toastMessage = message
+        toastType = .error
+        showToast = true
     }
 
     private func timeTypeColor(_ timeType: RoutineTimeType) -> Color {

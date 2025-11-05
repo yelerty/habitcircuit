@@ -32,13 +32,15 @@ class RoutineViewModel: ObservableObject {
 
             let newRoutines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
+                let category = RoutineCategory(rawValue: routine.category ?? "기타") ?? .other
                 return RoutineItem(
                     id: routine.id ?? UUID(),
                     name: routine.name ?? "",
                     order: Int(routine.order),
                     dayOfWeek: routine.dayOfWeek ?? "",
                     timeType: timeType,
-                    isCompleted: routine.isCompleted
+                    isCompleted: routine.isCompleted,
+                    category: category
                 )
             }
 
@@ -67,13 +69,15 @@ class RoutineViewModel: ObservableObject {
 
             let newAllRoutines = results.map { routine in
                 let timeType = RoutineTimeType(rawValue: routine.timeType ?? "아침") ?? .morning
+                let category = RoutineCategory(rawValue: routine.category ?? "기타") ?? .other
                 return RoutineItem(
                     id: routine.id ?? UUID(),
                     name: routine.name ?? "",
                     order: Int(routine.order),
                     dayOfWeek: routine.dayOfWeek ?? "",
                     timeType: timeType,
-                    isCompleted: routine.isCompleted
+                    isCompleted: routine.isCompleted,
+                    category: category
                 )
             }
 
@@ -101,12 +105,13 @@ class RoutineViewModel: ObservableObject {
     }
 
     // MARK: - Add Routine
-    func addRoutine(name: String, timeType: RoutineTimeType? = nil) {
+    func addRoutine(name: String, timeType: RoutineTimeType? = nil, category: RoutineCategory = .other) {
         let routine = Routine(context: viewContext)
         routine.id = UUID()
         routine.name = name
         routine.dayOfWeek = selectedDay.rawValue
         routine.timeType = (timeType ?? selectedTimeType).rawValue
+        routine.category = category.rawValue
         routine.order = Int16(routines.count)
         routine.isCompleted = false
         routine.createdAt = Date()

@@ -97,37 +97,92 @@ struct HomeView: View {
                 }
             } else {
                 // Empty State
-                VStack(spacing: 20) {
-                    Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray)
+                VStack(spacing: 24) {
+                    Spacer()
 
-                    Text("아직 루틴이 없습니다")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                    // Icon with animation
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue.opacity(0.1))
+                            .frame(width: 120, height: 120)
 
-                    Text("우측 상단 버튼을 눌러\n오늘의 루틴을 추가해보세요")
-                        .font(.body)
-                        .foregroundColor(.gray)
+                        Image(systemName: "calendar.badge.plus")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+                    }
+
+                    VStack(spacing: 12) {
+                        Text("아직 루틴이 없습니다")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        VStack(spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("우측 상단의")
+                                    .foregroundColor(.gray)
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.blue)
+                                Text("버튼을 눌러")
+                                    .foregroundColor(.gray)
+                            }
+                            .font(.body)
+
+                            Text("새로운 루틴을 추가해보세요")
+                                .font(.body)
+                                .foregroundColor(.gray)
+                        }
                         .multilineTextAlignment(.center)
+                    }
 
+                    // 또는 구분선
+                    HStack {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 1)
+                        Text("또는")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding(.horizontal, 8)
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 1)
+                    }
+                    .padding(.horizontal, 60)
+
+                    // CTA Button
                     Button(action: {
                         let generator = UIImpactFeedbackGenerator(style: .light)
                         generator.impactOccurred()
                         showEditScreen = true
                     }) {
-                        Text("루틴 추가하기")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 30)
-                            .padding(.vertical, 15)
-                            .background(Color.blue)
-                            .cornerRadius(12)
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                            Text("루틴 추가하기")
+                                .fontWeight(.semibold)
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 30)
+                        .padding(.vertical, 15)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.blue, Color.blue.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
                     }
                     .scaleButton()
                     .glowEffect(color: .blue, radius: 8)
+
+                    Spacer()
                 }
                 .frame(maxHeight: .infinity)
+                .padding(.horizontal)
             }
         }
         .navigationTitle(navigationTitle)
@@ -418,6 +473,12 @@ struct TimeRoutineBoxView: View {
                             Image(systemName: routine.isCompleted ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(routine.isCompleted ? .green : .gray)
                                 .font(.body)
+
+                            // Category icon
+                            Image(systemName: routine.category.icon)
+                                .foregroundColor(routine.category.color)
+                                .font(.caption)
+                                .opacity(routine.isCompleted ? 0.5 : 1.0)
 
                             Text(routine.name)
                                 .font(.body)
