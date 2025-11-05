@@ -6,6 +6,7 @@
         <attribute name="order" optional="NO" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="dayOfWeek" optional="NO" attributeType="String"/>
         <attribute name="timeType" optional="NO" attributeType="String" defaultValueString="아침"/>
+        <attribute name="category" optional="NO" attributeType="String" defaultValueString="기타"/>
         <attribute name="isCompleted" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
