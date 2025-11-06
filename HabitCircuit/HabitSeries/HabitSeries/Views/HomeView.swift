@@ -285,24 +285,24 @@ struct HomeView: View {
 
     // MARK: - Helper Functions
     private func startRoutine() {
-        // Get current appropriate time type
-        guard let currentTimeType = viewModel.getCurrentTimeType() else {
+        // Get first incomplete time type from available time types
+        guard let firstIncompleteTimeType = viewModel.getFirstIncompleteTimeType() else {
             timeRestrictionMessage = "현재 시간에는 루틴을 실행할 수 없습니다. (오전 3시 이후부터 가능)"
             showTimeRestrictionAlert = true
             return
         }
 
-        // Check if user can execute current time type
-        let (canExecute, message) = viewModel.canExecuteRoutine(for: currentTimeType)
+        // Check if user can execute this time type
+        let (canExecute, message) = viewModel.canExecuteRoutine(for: firstIncompleteTimeType)
         if !canExecute {
             timeRestrictionMessage = message
             showTimeRestrictionAlert = true
             return
         }
 
-        // Switch to appropriate time type
-        if viewModel.selectedTimeType != currentTimeType {
-            viewModel.changeTimeType(currentTimeType)
+        // Switch to first incomplete time type
+        if viewModel.selectedTimeType != firstIncompleteTimeType {
+            viewModel.changeTimeType(firstIncompleteTimeType)
         }
 
         // Start execution

@@ -349,6 +349,63 @@ class RoutineViewModel: ObservableObject {
         return nil
     }
 
+    // Get first incomplete time type from all available time types
+    func getFirstIncompleteTimeType() -> RoutineTimeType? {
+        let availableTimeTypes = getAvailableTimeTypes()
+
+        for timeType in RoutineTimeType.allCases {
+            // Only consider time types that are currently available
+            guard availableTimeTypes.contains(timeType) else { continue }
+
+            let count = getRoutineCount(for: timeType)
+            if count > 0 {
+                // Check if this time type has incomplete routines
+                let request = NSFetchRequest<Routine>(entityName: "Routine")
+                request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@ AND isCompleted == NO", selectedDay.rawValue, timeType.rawValue)
+
+                do {
+                    let incompleteCount = try viewContext.count(for: request)
+                    if incompleteCount > 0 {
+                        return timeType
+                    }
+                } catch {
+                    print("Error checking incomplete routines: \(error)")
+                }
+            }
+        }
+
+        return nil
+    }
+
+    // Get all incomplete time types that are currently available
+    func getAllIncompleteAvailableTimeTypes() -> [RoutineTimeType] {
+        let availableTimeTypes = getAvailableTimeTypes()
+        var incompleteTimeTypes: [RoutineTimeType] = []
+
+        for timeType in RoutineTimeType.allCases {
+            // Only consider time types that are currently available
+            guard availableTimeTypes.contains(timeType) else { continue }
+
+            let count = getRoutineCount(for: timeType)
+            if count > 0 {
+                // Check if this time type has incomplete routines
+                let request = NSFetchRequest<Routine>(entityName: "Routine")
+                request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@ AND isCompleted == NO", selectedDay.rawValue, timeType.rawValue)
+
+                do {
+                    let incompleteCount = try viewContext.count(for: request)
+                    if incompleteCount > 0 {
+                        incompleteTimeTypes.append(timeType)
+                    }
+                } catch {
+                    print("Error checking incomplete routines: \(error)")
+                }
+            }
+        }
+
+        return incompleteTimeTypes
+    }
+
     // MARK: - Time Restrictions
     func canExecuteRoutine(for timeType: RoutineTimeType) -> (Bool, String) {
         return TimeSlotManager.shared.canExecute(timeType: timeType)

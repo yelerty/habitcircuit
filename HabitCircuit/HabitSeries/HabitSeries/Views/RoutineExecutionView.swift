@@ -12,6 +12,14 @@ struct RoutineExecutionView: View {
     @State private var showSparkle = false
     @State private var showExitConfirmation = false
 
+    private var timeTypeColor: Color {
+        switch viewModel.selectedTimeType {
+        case .morning: return .orange
+        case .afternoon: return .yellow
+        case .evening: return .indigo
+        }
+    }
+
     var body: some View {
         ZStack {
             if showTransitionView, let nextTimeType = nextTimeType {
@@ -98,6 +106,28 @@ struct RoutineExecutionView: View {
                     // Current Routine - Large and Centered
                     if let currentRoutine = viewModel.currentRoutine {
                         VStack(spacing: 24) {
+                            // Time Type Display
+                            HStack(spacing: 8) {
+                                Image(systemName: viewModel.selectedTimeType.icon)
+                                    .font(.title3)
+                                    .foregroundColor(timeTypeColor)
+
+                                Text(viewModel.selectedTimeType.rawValue)
+                                    .font(.title3)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(timeTypeColor.opacity(0.2))
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(timeTypeColor.opacity(0.5), lineWidth: 1)
+                            )
+
                             // Progress Circle - Minimal
                             ZStack {
                                 Circle()
@@ -158,16 +188,21 @@ struct RoutineExecutionView: View {
                                             if viewModel.allDayRoutinesCompleted {
                                                 print("✅ All routines for the entire day completed!")
                                                 showCompletionView = true
-                                            } else if let next = viewModel.getNextIncompleteTimeType() {
-                                                // There are more time types to complete
-                                                print("🔄 Current time type completed, transitioning to \(next.rawValue)")
-                                                nextTimeType = next
-                                                showTransitionView = true
                                             } else {
-                                                // Current time type done, but there might be incomplete routines in previous time types
-                                                print("⚠️ Current time type completed, but some routines remain incomplete")
-                                                showCompletionView = false
-                                                isPresented = false
+                                                // Get all available incomplete time types
+                                                let availableIncompleteTypes = viewModel.getAllIncompleteAvailableTimeTypes()
+
+                                                if let next = availableIncompleteTypes.first {
+                                                    // There are more time types to complete that are currently available
+                                                    print("🔄 Current time type completed, transitioning to \(next.rawValue)")
+                                                    nextTimeType = next
+                                                    showTransitionView = true
+                                                } else {
+                                                    // No more available incomplete time types
+                                                    print("⚠️ Current time type completed, no more available time types")
+                                                    showCompletionView = false
+                                                    isPresented = false
+                                                }
                                             }
                                         }
                                     }
