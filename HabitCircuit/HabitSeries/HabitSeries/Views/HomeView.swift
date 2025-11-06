@@ -287,7 +287,19 @@ struct HomeView: View {
     private func startRoutine() {
         // Get first incomplete time type from available time types
         guard let firstIncompleteTimeType = viewModel.getFirstIncompleteTimeType() else {
-            timeRestrictionMessage = "현재 시간에는 루틴을 실행할 수 없습니다. (오전 3시 이후부터 가능)"
+            // Generate dynamic message showing available time ranges
+            let morningRange = TimeSlotManager.shared.getTimeRangeString(for: .morning)
+            let afternoonRange = TimeSlotManager.shared.getTimeRangeString(for: .afternoon)
+            let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
+
+            timeRestrictionMessage = """
+            현재는 루틴 실행 시간이 아닙니다.
+
+            실행 가능한 시간:
+            🌅 아침: \(morningRange)
+            ☀️ 점심: \(afternoonRange)
+            🌙 저녁: \(eveningRange)
+            """
             showTimeRestrictionAlert = true
             return
         }
