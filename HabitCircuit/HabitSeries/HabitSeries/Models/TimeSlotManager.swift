@@ -54,7 +54,15 @@ class TimeSlotManager: ObservableObject {
 
         // -1 hour to +3 hours from notification time
         let startHour = max(0, notificationHour - 1)
-        let endHour = min(24, notificationHour + 4) // +3 means up to but not including +4
+        var endHour = notificationHour + 4 // +3 means up to but not including +4
+
+        // For evening routines, allow extending past midnight
+        // Cap at 27 (which represents 3 AM next day) for proper wrap-around
+        if timeType == .evening && endHour > 24 {
+            endHour = min(27, endHour)
+        } else {
+            endHour = min(24, endHour)
+        }
 
         return (startHour, endHour)
     }
@@ -62,7 +70,17 @@ class TimeSlotManager: ObservableObject {
     func getTimeRangeString(for timeType: RoutineTimeType) -> String {
         let range = getTimeRange(for: timeType)
         let startString = formatHour(range.start)
-        let endString = formatHour(range.end)
+
+        // Handle end times that extend past midnight
+        let endString: String
+        if range.end > 24 {
+            // Convert 25 -> 1 AM, 26 -> 2 AM, 27 -> 3 AM (next day)
+            let nextDayHour = range.end - 24
+            endString = formatHour(nextDayHour) + " (익일)"
+        } else {
+            endString = formatHour(range.end)
+        }
+
         return "\(startString) - \(endString)"
     }
 
@@ -83,8 +101,15 @@ class TimeSlotManager: ObservableObject {
     // MARK: - Check if current time is within time slot
     func canExecute(timeType: RoutineTimeType) -> (Bool, String) {
         let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: Date())
+        var hour = calendar.component(.hour, from: Date())
         let range = getTimeRange(for: timeType)
+
+        // Handle time ranges that extend past midnight
+        // If current time is early morning (0-2 AM) and range extends past 24,
+        // add 24 to current hour for comparison
+        if range.end > 24 && hour < 3 {
+            hour += 24
+        }
 
         if hour >= range.start && hour < range.end {
             return (true, "")
@@ -96,12 +121,19 @@ class TimeSlotManager: ObservableObject {
 
     func getCurrentTimeType() -> RoutineTimeType? {
         let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: Date())
+        var hour = calendar.component(.hour, from: Date())
 
         // Check each time type to see if current hour falls within its range
         for timeType in RoutineTimeType.allCases {
             let range = getTimeRange(for: timeType)
-            if hour >= range.start && hour < range.end {
+
+            // Handle time ranges that extend past midnight
+            var adjustedHour = hour
+            if range.end > 24 && hour < 3 {
+                adjustedHour = hour + 24
+            }
+
+            if adjustedHour >= range.start && adjustedHour < range.end {
                 return timeType
             }
         }
