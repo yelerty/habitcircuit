@@ -352,12 +352,18 @@ class RoutineViewModel: ObservableObject {
     // Get first incomplete time type from all available time types
     func getFirstIncompleteTimeType() -> RoutineTimeType? {
         let availableTimeTypes = getAvailableTimeTypes()
+        print("🔍 getFirstIncompleteTimeType - Available: \(availableTimeTypes.map { $0.rawValue })")
 
         for timeType in RoutineTimeType.allCases {
             // Only consider time types that are currently available
-            guard availableTimeTypes.contains(timeType) else { continue }
+            guard availableTimeTypes.contains(timeType) else {
+                print("  ⏭️ \(timeType.rawValue) - Not available at current time")
+                continue
+            }
 
             let count = getRoutineCount(for: timeType)
+            print("  📊 \(timeType.rawValue) - Total routines: \(count)")
+
             if count > 0 {
                 // Check if this time type has incomplete routines
                 let request = NSFetchRequest<Routine>(entityName: "Routine")
@@ -365,7 +371,9 @@ class RoutineViewModel: ObservableObject {
 
                 do {
                     let incompleteCount = try viewContext.count(for: request)
+                    print("  ✏️ \(timeType.rawValue) - Incomplete: \(incompleteCount)")
                     if incompleteCount > 0 {
+                        print("  ✅ Selected: \(timeType.rawValue)")
                         return timeType
                     }
                 } catch {
@@ -374,6 +382,7 @@ class RoutineViewModel: ObservableObject {
             }
         }
 
+        print("  ❌ No incomplete time type found")
         return nil
     }
 

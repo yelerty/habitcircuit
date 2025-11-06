@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreData
 
 struct HomeView: View {
     @ObservedObject var viewModel: RoutineViewModel
@@ -285,24 +286,95 @@ struct HomeView: View {
 
     // MARK: - Helper Functions
     private func startRoutine() {
+        // Debug: Check available time types
+        let availableTypes = viewModel.getAvailableTimeTypes()
+        print("🔍 Available time types: \(availableTypes.map { $0.rawValue })")
+
         // Get first incomplete time type from available time types
         guard let firstIncompleteTimeType = viewModel.getFirstIncompleteTimeType() else {
-            // Generate dynamic message showing available time ranges
-            let morningRange = TimeSlotManager.shared.getTimeRangeString(for: .morning)
-            let afternoonRange = TimeSlotManager.shared.getTimeRangeString(for: .afternoon)
-            let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
+            // Check if there are any routines at all
+            let hasRoutines = viewModel.hasRoutines
+            let allCompleted = viewModel.allDayRoutinesCompleted
 
-            timeRestrictionMessage = """
-            현재는 루틴 실행 시간이 아닙니다.
+            print("⚠️ No incomplete time type found - hasRoutines: \(hasRoutines), allCompleted: \(allCompleted)")
 
-            실행 가능한 시간:
-            🌅 아침: \(morningRange)
-            ☀️ 점심: \(afternoonRange)
-            🌙 저녁: \(eveningRange)
-            """
+            if !hasRoutines {
+                timeRestrictionMessage = "루틴이 없습니다. 먼저 루틴을 추가해주세요."
+                showTimeRestrictionAlert = true
+                return
+            }
+
+            if allCompleted {
+                timeRestrictionMessage = "오늘의 모든 루틴을 이미 완료했습니다! 🎉"
+                showTimeRestrictionAlert = true
+                return
+            }
+
+            // Check which time types are currently available and have incomplete routines
+            let currentTimeType = viewModel.getCurrentTimeType()
+
+            // Check if current time type routines are already completed
+            if let currentTimeType = currentTimeType {
+                // Current time type is available, but no incomplete routines
+                // Check if there are incomplete routines in other time types
+                let hasIncompleteInOtherTypes = RoutineTimeType.allCases.contains { timeType in
+                    if timeType == currentTimeType { return false }
+                    let count = viewModel.getRoutineCount(for: timeType)
+                    if count == 0 { return false }
+
+                    let request = NSFetchRequest<Routine>(entityName: "Routine")
+                    request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@ AND isCompleted == NO",
+                                                   viewModel.selectedDay.rawValue, timeType.rawValue)
+                    do {
+                        let incompleteCount = try PersistenceController.shared.container.viewContext.count(for: request)
+                        return incompleteCount > 0
+                    } catch {
+                        return false
+                    }
+                }
+
+                if hasIncompleteInOtherTypes {
+                    // There are incomplete routines in other time types
+                    let morningRange = TimeSlotManager.shared.getTimeRangeString(for: .morning)
+                    let afternoonRange = TimeSlotManager.shared.getTimeRangeString(for: .afternoon)
+                    let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
+
+                    timeRestrictionMessage = """
+                    현재 \(currentTimeType.rawValue) 시간대의 루틴은 모두 완료했습니다! 🎉
+
+                    다른 시간대의 미완료 루틴이 있습니다.
+                    해당 시간대에 실행해주세요.
+
+                    실행 가능한 시간:
+                    🌅 아침: \(morningRange)
+                    ☀️ 점심: \(afternoonRange)
+                    🌙 저녁: \(eveningRange)
+                    """
+                } else {
+                    // Current time type routines are completed
+                    timeRestrictionMessage = "현재 \(currentTimeType.rawValue) 시간대의 루틴은 모두 완료했습니다! 🎉"
+                }
+            } else {
+                // Not in any time slot
+                let morningRange = TimeSlotManager.shared.getTimeRangeString(for: .morning)
+                let afternoonRange = TimeSlotManager.shared.getTimeRangeString(for: .afternoon)
+                let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
+
+                timeRestrictionMessage = """
+                현재는 루틴 실행 시간이 아닙니다.
+
+                실행 가능한 시간:
+                🌅 아침: \(morningRange)
+                ☀️ 점심: \(afternoonRange)
+                🌙 저녁: \(eveningRange)
+                """
+            }
+
             showTimeRestrictionAlert = true
             return
         }
+
+        print("✅ Starting routine for: \(firstIncompleteTimeType.rawValue)")
 
         // Check if user can execute this time type
         let (canExecute, message) = viewModel.canExecuteRoutine(for: firstIncompleteTimeType)

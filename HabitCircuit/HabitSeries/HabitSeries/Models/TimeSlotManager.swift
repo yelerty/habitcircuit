@@ -101,7 +101,8 @@ class TimeSlotManager: ObservableObject {
     // MARK: - Check if current time is within time slot
     func canExecute(timeType: RoutineTimeType) -> (Bool, String) {
         let calendar = Calendar.current
-        var hour = calendar.component(.hour, from: Date())
+        let originalHour = calendar.component(.hour, from: Date())
+        var hour = originalHour
         let range = getTimeRange(for: timeType)
 
         // Handle time ranges that extend past midnight
@@ -111,7 +112,10 @@ class TimeSlotManager: ObservableObject {
             hour += 24
         }
 
-        if hour >= range.start && hour < range.end {
+        let canRun = hour >= range.start && hour < range.end
+        print("⏰ canExecute(\(timeType.rawValue)) - Current: \(originalHour):00, Range: \(range.start)-\(range.end), Adjusted: \(hour), Result: \(canRun)")
+
+        if canRun {
             return (true, "")
         } else {
             let message = "\(timeType.rawValue) 루틴은 \(getTimeRangeString(for: timeType))에만 실행할 수 있습니다."
