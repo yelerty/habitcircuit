@@ -5,8 +5,29 @@ class TimeSlotManager: ObservableObject {
     static let shared = TimeSlotManager()
 
     private let notificationManager = NotificationManager.shared
+    private var cancellables = Set<AnyCancellable>()
+
+    @Published private var updateTrigger = UUID()
 
     private init() {
+        // Subscribe to notification manager changes
+        notificationManager.$morningTime
+            .sink { [weak self] _ in
+                self?.updateTrigger = UUID()
+            }
+            .store(in: &cancellables)
+
+        notificationManager.$afternoonTime
+            .sink { [weak self] _ in
+                self?.updateTrigger = UUID()
+            }
+            .store(in: &cancellables)
+
+        notificationManager.$eveningTime
+            .sink { [weak self] _ in
+                self?.updateTrigger = UUID()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Calculate time range based on notification time
@@ -47,9 +68,9 @@ class TimeSlotManager: ObservableObject {
 
     private func formatHour(_ hour: Int) -> String {
         if hour == 0 {
-            return "자정"
+            return "오전 12시(자정)"
         } else if hour == 24 {
-            return "자정"
+            return "오전 12시(자정)"
         } else if hour < 12 {
             return "오전 \(hour)시"
         } else if hour == 12 {

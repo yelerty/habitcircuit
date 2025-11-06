@@ -136,21 +136,24 @@ struct SettingsView: View {
                             icon: "sunrise.fill",
                             color: .orange,
                             title: "아침",
-                            timeRange: timeSlotManager.getTimeRangeString(for: .morning)
+                            timeType: .morning,
+                            timeSlotManager: timeSlotManager
                         )
 
                         TimeSlotSummaryRow(
                             icon: "sun.max.fill",
                             color: .yellow,
                             title: "점심",
-                            timeRange: timeSlotManager.getTimeRangeString(for: .afternoon)
+                            timeType: .afternoon,
+                            timeSlotManager: timeSlotManager
                         )
 
                         TimeSlotSummaryRow(
                             icon: "moon.stars.fill",
                             color: .indigo,
                             title: "저녁",
-                            timeRange: timeSlotManager.getTimeRangeString(for: .evening)
+                            timeType: .evening,
+                            timeSlotManager: timeSlotManager
                         )
                     }
                     .padding(.vertical, 4)
@@ -323,7 +326,8 @@ struct TimeSlotSummaryRow: View {
     let icon: String
     let color: Color
     let title: String
-    let timeRange: String
+    let timeType: RoutineTimeType
+    @ObservedObject var timeSlotManager: TimeSlotManager
 
     var body: some View {
         HStack(spacing: 12) {
@@ -336,7 +340,7 @@ struct TimeSlotSummaryRow: View {
                 .font(.body)
                 .frame(width: 40, alignment: .leading)
 
-            Text(timeRange)
+            Text(timeSlotManager.getTimeRangeString(for: timeType))
                 .font(.caption)
                 .foregroundColor(.secondary)
 
