@@ -189,20 +189,14 @@ struct RoutineExecutionView: View {
                                                 print("✅ All routines for the entire day completed!")
                                                 showCompletionView = true
                                             } else {
-                                                // Get all available incomplete time types
-                                                let availableIncompleteTypes = viewModel.getAllIncompleteAvailableTimeTypes()
+                                                // Current time type completed, return to main screen
+                                                print("✅ Current time type \(viewModel.selectedTimeType.rawValue) completed, returning to main screen")
 
-                                                if let next = availableIncompleteTypes.first {
-                                                    // There are more time types to complete that are currently available
-                                                    print("🔄 Current time type completed, transitioning to \(next.rawValue)")
-                                                    nextTimeType = next
-                                                    showTransitionView = true
-                                                } else {
-                                                    // No more available incomplete time types
-                                                    print("⚠️ Current time type completed, no more available time types")
-                                                    showCompletionView = false
-                                                    isPresented = false
-                                                }
+                                                // Haptic feedback for completion
+                                                let generator = UINotificationFeedbackGenerator()
+                                                generator.notificationOccurred(.success)
+
+                                                isPresented = false
                                             }
                                         }
                                     }
