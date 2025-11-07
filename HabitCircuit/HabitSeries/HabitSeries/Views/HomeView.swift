@@ -47,6 +47,12 @@ struct HomeView: View {
                 }
                 .id(viewModel.allRoutines.count)
 
+                // AdMob Banner
+                AdBannerView()
+                    .frame(height: 50)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
                 // Start Button
                 if viewModel.selectedDay == .today {
                     let canStartNow = viewModel.getCurrentTimeType() != nil
