@@ -4,11 +4,8 @@ import CoreData
 struct RoutineExecutionView: View {
     @ObservedObject var viewModel: RoutineViewModel
     @Binding var isPresented: Bool
-    @State private var showCompletionView = false
     @State private var rectangleOffset: CGSize = .zero
     @State private var currentCorner: Int = 0
-    @State private var showTransitionView = false
-    @State private var nextTimeType: RoutineTimeType?
     @State private var showSparkle = false
     @State private var showExitConfirmation = false
 
@@ -21,35 +18,7 @@ struct RoutineExecutionView: View {
     }
 
     var body: some View {
-        ZStack {
-            if showTransitionView, let nextTimeType = nextTimeType {
-                TransitionView(
-                    timeType: nextTimeType,
-                    onContinue: {
-                        viewModel.changeTimeType(nextTimeType)
-                        showTransitionView = false
-                        self.nextTimeType = nil
-                    },
-                    onFinish: {
-                        // Only show completion if ALL day's routines are done
-                        if viewModel.allDayRoutinesCompleted {
-                            showCompletionView = true
-                        } else {
-                            // User chose to finish, but not all routines completed
-                            isPresented = false
-                        }
-                        showTransitionView = false
-                    }
-                )
-            } else if viewModel.allDayRoutinesCompleted || showCompletionView {
-                CompletionView(
-                    viewModel: viewModel,
-                    isPresented: $isPresented
-                )
-            } else {
-                executionContent
-            }
-        }
+        executionContent
     }
 
     var executionContent: some View {
@@ -184,20 +153,14 @@ struct RoutineExecutionView: View {
                                     // Check if current time type is completed
                                     if viewModel.allRoutinesCompleted {
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                            // Check if ALL day's routines are completed (not just current time type)
-                                            if viewModel.allDayRoutinesCompleted {
-                                                print("✅ All routines for the entire day completed!")
-                                                showCompletionView = true
-                                            } else {
-                                                // Current time type completed, return to main screen
-                                                print("✅ Current time type \(viewModel.selectedTimeType.rawValue) completed, returning to main screen")
+                                            // Current time type completed - ALWAYS return to main screen
+                                            print("✅ Current time type \(viewModel.selectedTimeType.rawValue) completed, returning to main screen")
 
-                                                // Haptic feedback for completion
-                                                let generator = UINotificationFeedbackGenerator()
-                                                generator.notificationOccurred(.success)
+                                            // Haptic feedback for completion
+                                            let generator = UINotificationFeedbackGenerator()
+                                            generator.notificationOccurred(.success)
 
-                                                isPresented = false
-                                            }
+                                            isPresented = false
                                         }
                                     }
                                 }
@@ -255,7 +218,7 @@ struct RoutineExecutionView: View {
 
         // Schedule next move
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-            if !showCompletionView && !viewModel.allRoutinesCompleted {
+            if !viewModel.allRoutinesCompleted {
                 moveToNextCorner(screenSize: screenSize)
             }
         }

@@ -125,7 +125,7 @@ class TimeSlotManager: ObservableObject {
 
     func getCurrentTimeType() -> RoutineTimeType? {
         let calendar = Calendar.current
-        var hour = calendar.component(.hour, from: Date())
+        let hour = calendar.component(.hour, from: Date())
 
         // Check each time type to see if current hour falls within its range
         for timeType in RoutineTimeType.allCases {

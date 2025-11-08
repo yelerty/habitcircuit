@@ -322,6 +322,45 @@ class RoutineViewModel: ObservableObject {
         }
     }
 
+    // Check if all CURRENTLY AVAILABLE routines are completed
+    var allAvailableRoutinesCompleted: Bool {
+        let availableTimeTypes = getAvailableTimeTypes()
+        print("🔍 allAvailableRoutinesCompleted - Available time types: \(availableTimeTypes.map { $0.rawValue })")
+
+        guard !availableTimeTypes.isEmpty else {
+            print("  ❌ No available time types")
+            return false
+        }
+
+        // Check each available time type
+        for timeType in availableTimeTypes {
+            let request = NSFetchRequest<Routine>(entityName: "Routine")
+            request.predicate = NSPredicate(format: "dayOfWeek == %@ AND timeType == %@", selectedDay.rawValue, timeType.rawValue)
+
+            do {
+                let routines = try viewContext.fetch(request)
+
+                // If this time type has routines
+                if !routines.isEmpty {
+                    // Check if all are completed
+                    let allCompleted = routines.allSatisfy { $0.isCompleted }
+                    print("  📊 \(timeType.rawValue) - Total: \(routines.count), All completed: \(allCompleted)")
+
+                    if !allCompleted {
+                        print("  ❌ \(timeType.rawValue) has incomplete routines")
+                        return false
+                    }
+                }
+            } catch {
+                print("  ⚠️ Error checking \(timeType.rawValue): \(error)")
+                return false
+            }
+        }
+
+        print("  ✅ All available routines completed!")
+        return true
+    }
+
     // Get next time type with incomplete routines
     func getNextIncompleteTimeType() -> RoutineTimeType? {
         let currentIndex = RoutineTimeType.allCases.firstIndex(of: selectedTimeType) ?? 0

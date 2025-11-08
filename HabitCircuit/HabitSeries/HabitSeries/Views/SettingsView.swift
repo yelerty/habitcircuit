@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var alertMessage = ""
     @State private var showSavedRoutines = false
     @State private var showTimeGuide = false
+    @State private var showDefaultRoutinesManagement = false
 
     var body: some View {
         NavigationView {
@@ -92,6 +93,19 @@ struct SettingsView: View {
                     }
 
                     Button(action: {
+                        showDefaultRoutinesManagement = true
+                    }) {
+                        HStack {
+                            Label("예시 루틴 관리", systemImage: "list.bullet.clipboard")
+                                .foregroundColor(.cyan)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+
+                    Button(action: {
                         exportRoutines()
                     }) {
                         HStack {
@@ -126,7 +140,7 @@ struct SettingsView: View {
                 } header: {
                     Label("데이터 관리", systemImage: "folder.fill")
                 } footer: {
-                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.")
+                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n예시 루틴을 추가하여 빠르게 루틴을 만들 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.")
                 }
 
                 // Time Slot Info Section
@@ -207,6 +221,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showSavedRoutines) {
                 SavedRoutinesView(viewModel: viewModel)
+            }
+            .sheet(isPresented: $showDefaultRoutinesManagement) {
+                DefaultRoutinesManagementView()
             }
             .sheet(isPresented: $showTimeGuide) {
                 TimeGuideView(isPresented: $showTimeGuide)

@@ -12,21 +12,30 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var viewModel: RoutineViewModel
     @State private var showEditScreen = false
+    @State private var isLoading = true
 
     init() {
         _viewModel = StateObject(wrappedValue: RoutineViewModel(context: PersistenceController.shared.container.viewContext))
     }
 
     var body: some View {
-        NavigationView {
-            HomeView(viewModel: viewModel, showEditScreen: $showEditScreen)
-        }
-        .sheet(isPresented: $showEditScreen, onDismiss: {
-            // Reload data when edit screen is dismissed
-            viewModel.loadRoutines()
-            viewModel.loadAllRoutines()
-        }) {
-            RoutineEditView(viewModel: viewModel)
+        ZStack {
+            if isLoading {
+                SplashScreenView(isLoading: $isLoading)
+                    .transition(.opacity)
+            } else {
+                NavigationView {
+                    HomeView(viewModel: viewModel, showEditScreen: $showEditScreen)
+                }
+                .sheet(isPresented: $showEditScreen, onDismiss: {
+                    // Reload data when edit screen is dismissed
+                    viewModel.loadRoutines()
+                    viewModel.loadAllRoutines()
+                }) {
+                    RoutineEditView(viewModel: viewModel)
+                }
+                .transition(.opacity)
+            }
         }
     }
 }

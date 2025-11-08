@@ -14,8 +14,10 @@ struct HabitSeriesApp: App {
     let persistenceController = PersistenceController.shared
 
     init() {
-        // Initialize Google Mobile Ads SDK
-        MobileAds.shared.start(completionHandler: nil)
+        // Initialize Google Mobile Ads SDK asynchronously (non-blocking)
+        DispatchQueue.global(qos: .background).async {
+            MobileAds.shared.start(completionHandler: nil)
+        }
     }
 
     var body: some Scene {
