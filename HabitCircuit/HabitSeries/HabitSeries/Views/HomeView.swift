@@ -39,7 +39,8 @@ struct HomeView: View {
                         ForEach(RoutineTimeType.allCases, id: \.self) { timeType in
                             TimeRoutineBoxView(
                                 viewModel: viewModel,
-                                timeType: timeType
+                                timeType: timeType,
+                                showEditScreen: $showEditScreen
                             )
                         }
                     }
@@ -125,11 +126,11 @@ struct HomeView: View {
 
                         VStack(spacing: 8) {
                             HStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill")
+                                Image(systemName: "square.and.pencil")
                                     .foregroundColor(.blue)
                                 Text("우측 상단의")
                                     .foregroundColor(.gray)
-                                Image(systemName: "plus.circle.fill")
+                                Image(systemName: "square.and.pencil")
                                     .font(.title3)
                                     .foregroundColor(.blue)
                                 Text("버튼을 눌러")
@@ -166,8 +167,8 @@ struct HomeView: View {
                         showEditScreen = true
                     }) {
                         HStack(spacing: 8) {
-                            Image(systemName: "plus.circle.fill")
-                            Text("루틴 추가하기")
+                            Image(systemName: "square.and.pencil")
+                            Text("루틴 편집하기")
                                 .fontWeight(.semibold)
                         }
                         .font(.headline)
@@ -224,7 +225,7 @@ struct HomeView: View {
                     Button(action: {
                         showEditScreen = true
                     }) {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "square.and.pencil")
                             .font(.title2)
                     }
                 }
@@ -506,6 +507,7 @@ struct DaySelectorView: View {
 struct TimeRoutineBoxView: View {
     @ObservedObject var viewModel: RoutineViewModel
     let timeType: RoutineTimeType
+    @Binding var showEditScreen: Bool
 
     private var routinesForTimeType: [RoutineItem] {
         viewModel.allRoutines.filter { $0.timeType == timeType }
@@ -578,6 +580,15 @@ struct TimeRoutineBoxView: View {
                             Spacer()
                         }
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onLongPressGesture(minimumDuration: 0.5) {
+                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                            generator.impactOccurred()
+
+                            // Switch to the routine's time type before opening edit screen
+                            viewModel.changeTimeType(routine.timeType)
+                            showEditScreen = true
+                        }
                     }
                 }
                 .padding(.top, 4)
