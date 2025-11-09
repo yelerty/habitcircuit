@@ -41,11 +41,10 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
-        .onChange(of: pendingFileURL) { newURL in
-            if let url = newURL {
-                handleFileImport(url)
-                pendingFileURL = nil
-            }
+        .onChange(of: pendingFileURL) {
+            guard let url = pendingFileURL else { return }
+            handleFileImport(url)
+            pendingFileURL = nil // Reset after handling
         }
         .alert("루틴 가져오기", isPresented: $showImportAlert) {
             Button("확인", role: .cancel) { }
@@ -65,22 +64,32 @@ struct ContentView: View {
 
         do {
             let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let routineData = try decoder.decode(RoutineExportData.self, from: data)
 
-            // Import routines
+            // Use RoutineExportManager to parse the data
+            guard let importedRoutines = RoutineExportManager.shared.importRoutines(from: data) else {
+                importMessage = "파일 형식이 올바르지 않습니다."
+                showImportAlert = true
+                return
+            }
+
+            // Import routines using Core Data directly
             var importedCount = 0
-            for routine in routineData.routines {
-                viewModel.addRoutine(
-                    name: routine.name,
-                    dayOfWeek: routine.dayOfWeek,
-                    timeType: routine.timeType,
-                    order: Int16(routine.order)
-                )
+            for routineData in importedRoutines {
+                let routine = Routine(context: viewContext)
+                routine.id = UUID()
+                routine.name = routineData.name
+                routine.dayOfWeek = routineData.dayOfWeek
+                routine.timeType = routineData.timeType
+                routine.order = Int16(routineData.order)
+                routine.isCompleted = false
+                routine.createdAt = Date()
+                routine.category = RoutineCategory.other.rawValue
+
                 importedCount += 1
             }
 
+            // Save context
+            try viewContext.save()
             importMessage = "\(importedCount)개의 루틴을 가져왔습니다!"
             showImportAlert = true
 
