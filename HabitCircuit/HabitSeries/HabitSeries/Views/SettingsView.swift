@@ -140,7 +140,7 @@ struct SettingsView: View {
                 } header: {
                     Label("데이터 관리", systemImage: "folder.fill")
                 } footer: {
-                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n예시 루틴을 추가하여 빠르게 루틴을 만들 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.")
+                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n예시 루틴을 추가하여 빠르게 루틴을 만들 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.\n\n💡 웹에서 다운로드한 루틴은 파일 앱의 'HabitCircuit' 폴더에 저장하면 가져오기 시 쉽게 찾을 수 있습니다.")
                 }
 
                 // Time Slot Info Section
