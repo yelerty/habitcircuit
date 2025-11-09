@@ -7,6 +7,7 @@ struct RoutineEditView: View {
     @State private var newRoutineName: String = ""
     @State private var editingRoutine: RoutineItem?
     @State private var editingText: String = ""
+    @State private var editingCategory: RoutineCategory = .other
     @State private var showDefaultRoutines = false
     @State private var showDeleteConfirmation = false
     @State private var routineToDelete: IndexSet?
@@ -195,26 +196,58 @@ struct RoutineEditView: View {
                     List {
                         ForEach(viewModel.routines) { routine in
                             if editingRoutine?.id == routine.id {
-                                HStack {
-                                    TextField("루틴 이름", text: $editingText)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                                    Button("저장") {
-                                        let generator = UIImpactFeedbackGenerator(style: .medium)
-                                        generator.impactOccurred()
-                                        saveEdit()
+                                VStack(alignment: .leading, spacing: 8) {
+                                    // Category icon picker
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 8) {
+                                            ForEach(RoutineCategory.allCases, id: \.self) { category in
+                                                Button(action: {
+                                                    let generator = UIImpactFeedbackGenerator(style: .light)
+                                                    generator.impactOccurred()
+                                                    editingCategory = category
+                                                }) {
+                                                    VStack(spacing: 4) {
+                                                        Image(systemName: category.icon)
+                                                            .font(.title3)
+                                                        Text(category.rawValue)
+                                                            .font(.caption2)
+                                                    }
+                                                    .foregroundColor(editingCategory == category ? .white : category.color)
+                                                    .frame(width: 60, height: 60)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 8)
+                                                            .fill(editingCategory == category ? category.color : category.color.opacity(0.1))
+                                                    )
+                                                }
+                                                .buttonStyle(BorderlessButtonStyle())
+                                            }
+                                        }
+                                        .padding(.vertical, 4)
                                     }
-                                    .foregroundColor(.blue)
-                                    .buttonStyle(BorderlessButtonStyle())
 
-                                    Button("취소") {
-                                        let generator = UIImpactFeedbackGenerator(style: .light)
-                                        generator.impactOccurred()
-                                        cancelEdit()
+                                    // Name and action buttons
+                                    HStack {
+                                        TextField("루틴 이름", text: $editingText)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                                        Button("저장") {
+                                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                                            generator.impactOccurred()
+                                            saveEdit()
+                                        }
+                                        .foregroundColor(.blue)
+                                        .buttonStyle(BorderlessButtonStyle())
+
+                                        Button("취소") {
+                                            let generator = UIImpactFeedbackGenerator(style: .light)
+                                            generator.impactOccurred()
+                                            cancelEdit()
+                                        }
+                                        .foregroundColor(.red)
+                                        .buttonStyle(BorderlessButtonStyle())
                                     }
-                                    .foregroundColor(.red)
-                                    .buttonStyle(BorderlessButtonStyle())
                                 }
+                                .padding(.vertical, 4)
                             } else {
                                 HStack {
                                     Image(systemName: "line.3.horizontal")
@@ -330,6 +363,7 @@ struct RoutineEditView: View {
     private func startEditing(routine: RoutineItem) {
         editingRoutine = routine
         editingText = routine.name
+        editingCategory = routine.category
     }
 
     private func saveEdit() {
@@ -340,7 +374,7 @@ struct RoutineEditView: View {
         print("🎯 Before update - viewModel.routines.count: \(viewModel.routines.count)")
 
         if !trimmedName.isEmpty {
-            viewModel.updateRoutine(id: routine.id, newName: trimmedName)
+            viewModel.updateRoutine(id: routine.id, newName: trimmedName, newCategory: editingCategory)
             showSuccessToast("루틴이 수정되었습니다")
         }
 
@@ -351,6 +385,7 @@ struct RoutineEditView: View {
     private func cancelEdit() {
         editingRoutine = nil
         editingText = ""
+        editingCategory = .other
     }
 
     private func showSuccessToast(_ message: String) {

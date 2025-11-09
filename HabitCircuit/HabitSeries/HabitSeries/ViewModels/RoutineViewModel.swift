@@ -196,7 +196,7 @@ class RoutineViewModel: ObservableObject {
     }
 
     // MARK: - Update Routine
-    func updateRoutine(id: UUID, newName: String) {
+    func updateRoutine(id: UUID, newName: String, newCategory: RoutineCategory? = nil) {
         let request = NSFetchRequest<Routine>(entityName: "Routine")
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
 
@@ -204,6 +204,9 @@ class RoutineViewModel: ObservableObject {
             let results = try viewContext.fetch(request)
             if let routine = results.first {
                 routine.name = newName
+                if let category = newCategory {
+                    routine.category = category.rawValue
+                }
                 saveContext()
                 loadRoutines()
                 loadAllRoutines()
