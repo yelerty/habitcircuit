@@ -16,6 +16,8 @@ struct ContentView: View {
     @Binding var pendingFileURL: URL?
     @State private var showImportAlert = false
     @State private var importMessage = ""
+    @State private var showReplaceConfirmation = false
+    @State private var pendingImportURL: URL?
 
     init(pendingFileURL: Binding<URL?> = .constant(nil)) {
         _viewModel = StateObject(wrappedValue: RoutineViewModel(context: PersistenceController.shared.container.viewContext))
@@ -43,8 +45,23 @@ struct ContentView: View {
         }
         .onChange(of: pendingFileURL) {
             guard let url = pendingFileURL else { return }
-            handleFileImport(url)
-            pendingFileURL = nil // Reset after handling
+            // Store URL and show confirmation
+            pendingImportURL = url
+            showReplaceConfirmation = true
+            pendingFileURL = nil
+        }
+        .alert("기존 루틴 교체", isPresented: $showReplaceConfirmation) {
+            Button("취소", role: .cancel) {
+                pendingImportURL = nil
+            }
+            Button("교체", role: .destructive) {
+                if let url = pendingImportURL {
+                    performFileImport(url)
+                    pendingImportURL = nil
+                }
+            }
+        } message: {
+            Text("가져온 루틴으로 모든 기존 루틴을 교체합니다.\n기존 루틴은 삭제됩니다.")
         }
         .alert("루틴 가져오기", isPresented: $showImportAlert) {
             Button("확인", role: .cancel) { }
@@ -53,7 +70,7 @@ struct ContentView: View {
         }
     }
 
-    private func handleFileImport(_ url: URL) {
+    private func performFileImport(_ url: URL) {
         // Ensure we have access to the file
         guard url.startAccessingSecurityScopedResource() else {
             importMessage = "파일 접근 권한이 없습니다."
@@ -72,7 +89,22 @@ struct ContentView: View {
                 return
             }
 
-            // Import routines using Core Data directly
+            // DELETE ALL EXISTING ROUTINES FIRST
+            let fetchRequest: NSFetchRequest<NSFetchRequestResult> = Routine.fetchRequest()
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+
+            do {
+                try viewContext.execute(deleteRequest)
+                // Reset the context after batch delete
+                viewContext.reset()
+            } catch {
+                print("Failed to delete existing routines: \(error)")
+                importMessage = "기존 루틴 삭제 실패: \(error.localizedDescription)"
+                showImportAlert = true
+                return
+            }
+
+            // Import new routines using Core Data directly
             var importedCount = 0
             for routineData in importedRoutines {
                 let routine = Routine(context: viewContext)
@@ -90,7 +122,7 @@ struct ContentView: View {
 
             // Save context
             try viewContext.save()
-            importMessage = "\(importedCount)개의 루틴을 가져왔습니다!"
+            importMessage = "기존 루틴을 삭제하고 \(importedCount)개의 새로운 루틴을 가져왔습니다!"
             showImportAlert = true
 
             // Reload data
