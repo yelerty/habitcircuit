@@ -12,6 +12,7 @@ struct SavedRoutinesView: View {
     @State private var alertMessage = ""
     @State private var showLoadConfirm = false
     @State private var selectedSlotToLoad: Int?
+    @State private var showDeleteAllConfirm = false
 
     var body: some View {
         NavigationView {
@@ -49,6 +50,28 @@ struct SavedRoutinesView: View {
                 .background(Color(.systemBackground))
 
                 Divider()
+
+                // Delete All Button
+                Button(action: {
+                    showDeleteAllConfirm = true
+                }) {
+                    HStack {
+                        Image(systemName: "trash.fill")
+                        Text("현재 루틴 모두 삭제")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.red.opacity(0.1))
+                    .foregroundColor(.red)
+                    .cornerRadius(8)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+
+                Divider()
+                    .padding(.top, 8)
 
                 // Saved Slots List
                 if savedRoutineManager.savedSlots.isEmpty {
@@ -117,6 +140,14 @@ struct SavedRoutinesView: View {
                 Button("확인", role: .cancel) {}
             } message: {
                 Text(alertMessage)
+            }
+            .alert("모든 루틴 삭제", isPresented: $showDeleteAllConfirm) {
+                Button("삭제", role: .destructive) {
+                    deleteAllRoutines()
+                }
+                Button("취소", role: .cancel) {}
+            } message: {
+                Text("⚠️ 현재 모든 요일의 모든 루틴이 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.\n진행하시겠습니까?")
             }
         }
     }
@@ -205,6 +236,38 @@ struct SavedRoutinesView: View {
             showAlert = true
         } catch {
             alertMessage = "루틴을 불러오는 중 오류가 발생했습니다"
+            showAlert = true
+        }
+    }
+
+    private func deleteAllRoutines() {
+        let fetchRequest: NSFetchRequest<Routine> = Routine.fetchRequest()
+
+        do {
+            let context = PersistenceController.shared.container.viewContext
+
+            // Fetch all existing routines
+            let existingRoutines = try context.fetch(fetchRequest)
+
+            // Delete each routine individually
+            for routine in existingRoutines {
+                context.delete(routine)
+            }
+
+            // Save the deletion
+            try context.save()
+
+            print("✅ Successfully deleted \(existingRoutines.count) routines")
+
+            // Reload data in viewModel
+            viewModel.loadRoutines()
+            viewModel.loadAllRoutines()
+
+            alertMessage = "모든 루틴이 삭제되었습니다 (\(existingRoutines.count)개)"
+            showAlert = true
+        } catch {
+            print("Failed to delete all routines: \(error)")
+            alertMessage = "루틴 삭제 중 오류가 발생했습니다: \(error.localizedDescription)"
             showAlert = true
         }
     }
