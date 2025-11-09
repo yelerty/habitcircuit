@@ -27,7 +27,17 @@ struct HabitSeriesApp: App {
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .onOpenURL { url in
                     // Handle file opening from external sources (Safari, Files app, etc.)
-                    handleIncomingFile(url)
+                    if url.scheme == "habitcircuit" {
+                        // Handle URL scheme from Share Extension
+                        checkPendingImport()
+                    } else {
+                        // Handle direct file opening
+                        handleIncomingFile(url)
+                    }
+                }
+                .onAppear {
+                    // Check for pending import from Share Extension when app appears
+                    checkPendingImport()
                 }
         }
     }
@@ -40,5 +50,24 @@ struct HabitSeriesApp: App {
 
         // Store the URL to be processed by ContentView
         pendingFileURL = url
+    }
+
+    private func checkPendingImport() {
+        // Check if there's a pending import from Share Extension
+        guard let sharedContainerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.habitcircuit.shared") else {
+            return
+        }
+
+        let fileURL = sharedContainerURL.appendingPathComponent("pending_import.json")
+
+        // Check if file exists
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            // Set as pending file URL
+            pendingFileURL = fileURL
+
+            // Delete the file after reading
+            try? FileManager.default.removeItem(at: fileURL)
+        }
     }
 }
