@@ -90,13 +90,21 @@ struct ContentView: View {
             }
 
             // DELETE ALL EXISTING ROUTINES FIRST
-            let fetchRequest: NSFetchRequest<NSFetchRequestResult> = Routine.fetchRequest()
-            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            let fetchRequest: NSFetchRequest<Routine> = Routine.fetchRequest()
 
             do {
-                try viewContext.execute(deleteRequest)
-                // Reset the context after batch delete
-                viewContext.reset()
+                // Fetch all existing routines
+                let existingRoutines = try viewContext.fetch(fetchRequest)
+
+                // Delete each routine individually
+                for routine in existingRoutines {
+                    viewContext.delete(routine)
+                }
+
+                // Save the deletion
+                try viewContext.save()
+
+                print("✅ Successfully deleted \(existingRoutines.count) existing routines")
             } catch {
                 print("Failed to delete existing routines: \(error)")
                 importMessage = "기존 루틴 삭제 실패: \(error.localizedDescription)"
