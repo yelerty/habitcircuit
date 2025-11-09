@@ -263,9 +263,9 @@ struct SettingsView: View {
         case .success(let url):
             do {
                 let data = try Data(contentsOf: url)
-                let success = viewModel.importRoutines(from: data, replaceExisting: false)
+                let success = viewModel.importRoutines(from: data, replaceExisting: true)
                 if success {
-                    alertMessage = "루틴을 성공적으로 가져왔습니다!"
+                    alertMessage = "기존 루틴을 삭제하고 새로운 루틴을 가져왔습니다!"
                 } else {
                     alertMessage = "루틴 가져오기에 실패했습니다. 파일 형식을 확인해주세요."
                 }
