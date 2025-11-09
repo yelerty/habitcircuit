@@ -380,6 +380,8 @@ struct DefaultRoutinesSheet: View {
     @StateObject private var defaultRoutines = DefaultRoutines()
     @State private var newRoutineName = ""
     @State private var showingAddAlert = false
+    @State private var selectedRoutine: String?
+    @State private var showCheckmark = false
 
     let onSelect: (String) -> Void
 
@@ -445,20 +447,46 @@ struct DefaultRoutinesSheet: View {
                                     ForEach(Array(defaultRoutines.customRoutines.enumerated()), id: \.element) { index, routine in
                                         HStack {
                                             Button(action: {
-                                                let generator = UIImpactFeedbackGenerator(style: .light)
+                                                // Strong haptic feedback
+                                                let generator = UIImpactFeedbackGenerator(style: .heavy)
                                                 generator.impactOccurred()
+
+                                                // Visual feedback - show checkmark animation
+                                                selectedRoutine = routine
+                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                                    showCheckmark = true
+                                                }
+
+                                                // Hide checkmark and execute selection
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                                    withAnimation {
+                                                        showCheckmark = false
+                                                    }
+                                                    selectedRoutine = nil
+                                                }
+
                                                 onSelect(routine)
                                             }) {
-                                                HStack {
-                                                    Image(systemName: "plus.circle.fill")
-                                                        .foregroundColor(.green)
-                                                        .font(.caption)
+                                                ZStack {
+                                                    HStack {
+                                                        Image(systemName: "plus.circle.fill")
+                                                            .foregroundColor(.green)
+                                                            .font(.caption)
 
-                                                    Text(routine)
-                                                        .font(.body)
-                                                        .foregroundColor(.primary)
+                                                        Text(routine)
+                                                            .font(.body)
+                                                            .foregroundColor(.primary)
 
-                                                    Spacer()
+                                                        Spacer()
+                                                    }
+
+                                                    // Checkmark overlay
+                                                    if selectedRoutine == routine && showCheckmark {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.title)
+                                                            .foregroundColor(.green)
+                                                            .transition(.scale.combined(with: .opacity))
+                                                    }
                                                 }
                                             }
                                             .bouncyButton()
@@ -507,20 +535,46 @@ struct DefaultRoutinesSheet: View {
                             ], spacing: 12) {
                                 ForEach(DefaultRoutines.builtInExamples, id: \.self) { routine in
                                     Button(action: {
-                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        // Strong haptic feedback
+                                        let generator = UIImpactFeedbackGenerator(style: .heavy)
                                         generator.impactOccurred()
+
+                                        // Visual feedback - show checkmark animation
+                                        selectedRoutine = routine
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                            showCheckmark = true
+                                        }
+
+                                        // Hide checkmark and execute selection
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            withAnimation {
+                                                showCheckmark = false
+                                            }
+                                            selectedRoutine = nil
+                                        }
+
                                         onSelect(routine)
                                     }) {
-                                        HStack {
-                                            Image(systemName: "plus.circle.fill")
-                                                .foregroundColor(.blue)
-                                                .font(.caption)
+                                        ZStack {
+                                            HStack {
+                                                Image(systemName: "plus.circle.fill")
+                                                    .foregroundColor(.blue)
+                                                    .font(.caption)
 
-                                            Text(routine)
-                                                .font(.body)
-                                                .foregroundColor(.primary)
+                                                Text(routine)
+                                                    .font(.body)
+                                                    .foregroundColor(.primary)
 
-                                            Spacer()
+                                                Spacer()
+                                            }
+
+                                            // Checkmark overlay
+                                            if selectedRoutine == routine && showCheckmark {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.title)
+                                                    .foregroundColor(.blue)
+                                                    .transition(.scale.combined(with: .opacity))
+                                            }
                                         }
                                         .padding()
                                         .background(

@@ -19,6 +19,17 @@ struct RoutineExecutionView: View {
 
     var body: some View {
         executionContent
+            .onChange(of: viewModel.allRoutinesCompleted) { oldValue, newValue in
+                if newValue {
+                    // All routines for current time type completed
+                    print("✅ All routines completed detected, closing in 0.5s")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        let generator = UINotificationFeedbackGenerator()
+                        generator.notificationOccurred(.success)
+                        isPresented = false
+                    }
+                }
+            }
     }
 
     var executionContent: some View {
@@ -56,16 +67,9 @@ struct RoutineExecutionView: View {
 
                         // Enhanced progress indicator
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text("현재: \(viewModel.progressText)")
+                            Text("\(viewModel.selectedTimeType.rawValue): \(viewModel.progressText)")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.7))
-
-                            if viewModel.allRoutines.count > 0 {
-                                let totalCompleted = viewModel.allRoutines.filter { $0.isCompleted }.count
-                                Text("전체: \(totalCompleted)/\(viewModel.allRoutines.count)")
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.5))
-                            }
                         }
                     }
                     .padding()
@@ -149,20 +153,7 @@ struct RoutineExecutionView: View {
 
                                 withAnimation {
                                     viewModel.completeCurrentRoutine()
-
-                                    // Check if current time type is completed
-                                    if viewModel.allRoutinesCompleted {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                            // Current time type completed - ALWAYS return to main screen
-                                            print("✅ Current time type \(viewModel.selectedTimeType.rawValue) completed, returning to main screen")
-
-                                            // Haptic feedback for completion
-                                            let generator = UINotificationFeedbackGenerator()
-                                            generator.notificationOccurred(.success)
-
-                                            isPresented = false
-                                        }
-                                    }
+                                    // onChange handler will detect completion and close automatically
                                 }
                             }) {
                                 HStack(spacing: 6) {

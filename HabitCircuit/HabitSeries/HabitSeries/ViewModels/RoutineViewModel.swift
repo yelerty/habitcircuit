@@ -228,6 +228,11 @@ class RoutineViewModel: ObservableObject {
                 saveContext()
                 loadRoutines()
                 loadAllRoutines()
+
+                // Force update to trigger view refresh
+                objectWillChange.send()
+
+                print("🎯 completeCurrentRoutine - allRoutinesCompleted: \(allRoutinesCompleted)")
                 // loadRoutines()가 updateCurrentRoutineIndex()를 호출하므로 별도 증가 불필요
             }
         } catch {
