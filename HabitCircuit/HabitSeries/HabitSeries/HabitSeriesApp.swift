@@ -12,6 +12,7 @@ import GoogleMobileAds
 @main
 struct HabitSeriesApp: App {
     let persistenceController = PersistenceController.shared
+    @State private var pendingFileURL: URL?
 
     init() {
         // Initialize Google Mobile Ads SDK asynchronously (non-blocking)
@@ -22,8 +23,22 @@ struct HabitSeriesApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(pendingFileURL: $pendingFileURL)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .onOpenURL { url in
+                    // Handle file opening from external sources (Safari, Files app, etc.)
+                    handleIncomingFile(url)
+                }
         }
+    }
+
+    private func handleIncomingFile(_ url: URL) {
+        // Check if it's a JSON file
+        guard url.pathExtension.lowercased() == "json" else {
+            return
+        }
+
+        // Store the URL to be processed by ContentView
+        pendingFileURL = url
     }
 }
