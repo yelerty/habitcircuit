@@ -44,11 +44,27 @@ struct ContentView: View {
             }
         }
         .onChange(of: pendingFileURL) {
-            guard let url = pendingFileURL else { return }
+            guard let url = pendingFileURL else {
+                print("⚠️ pendingFileURL is nil, skipping")
+                return
+            }
+
+            print("🔵 onChange triggered with URL: \(url.lastPathComponent)")
+            print("🔵 Current pendingImportURL: \(pendingImportURL?.lastPathComponent ?? "nil")")
+
+            // Prevent duplicate imports
+            if pendingImportURL != nil {
+                print("⚠️ Import already pending, ignoring duplicate trigger")
+                pendingFileURL = nil
+                return
+            }
+
             // Store URL and show confirmation
             pendingImportURL = url
             showReplaceConfirmation = true
             pendingFileURL = nil
+
+            print("✅ Set pendingImportURL and showing confirmation")
         }
         .alert("기존 루틴 교체", isPresented: $showReplaceConfirmation) {
             Button("취소", role: .cancel) {
@@ -71,8 +87,12 @@ struct ContentView: View {
     }
 
     private func performFileImport(_ url: URL) {
+        print("🟢 === START performFileImport ===")
+        print("🟢 URL: \(url.lastPathComponent)")
+
         // Ensure we have access to the file
         guard url.startAccessingSecurityScopedResource() else {
+            print("❌ Failed to access security scoped resource")
             importMessage = "파일 접근 권한이 없습니다."
             showImportAlert = true
             return
@@ -81,13 +101,17 @@ struct ContentView: View {
 
         do {
             let data = try Data(contentsOf: url)
+            print("🟢 Read \(data.count) bytes from file")
 
             // Use RoutineExportManager to parse the data
             guard let importedRoutines = RoutineExportManager.shared.importRoutines(from: data) else {
+                print("❌ Failed to parse routines from data")
                 importMessage = "파일 형식이 올바르지 않습니다."
                 showImportAlert = true
                 return
             }
+
+            print("🟢 Parsed \(importedRoutines.count) routines from file")
 
             // DELETE ALL EXISTING ROUTINES FIRST
             let fetchRequest: NSFetchRequest<Routine> = Routine.fetchRequest()
@@ -95,6 +119,7 @@ struct ContentView: View {
             do {
                 // Fetch all existing routines
                 let existingRoutines = try viewContext.fetch(fetchRequest)
+                print("🟢 Found \(existingRoutines.count) existing routines to delete")
 
                 // Delete each routine individually
                 for routine in existingRoutines {
@@ -106,7 +131,7 @@ struct ContentView: View {
 
                 print("✅ Successfully deleted \(existingRoutines.count) existing routines")
             } catch {
-                print("Failed to delete existing routines: \(error)")
+                print("❌ Failed to delete existing routines: \(error)")
                 importMessage = "기존 루틴 삭제 실패: \(error.localizedDescription)"
                 showImportAlert = true
                 return
@@ -128,15 +153,22 @@ struct ContentView: View {
                 importedCount += 1
             }
 
+            print("🟢 Created \(importedCount) new routines")
+
             // Save context
             try viewContext.save()
+            print("✅ Saved new routines to Core Data")
+
             importMessage = "기존 루틴을 삭제하고 \(importedCount)개의 새로운 루틴을 가져왔습니다!"
             showImportAlert = true
 
             // Reload data
             viewModel.loadRoutines()
             viewModel.loadAllRoutines()
+            print("✅ Reloaded viewModel data")
+            print("🟢 === END performFileImport ===")
         } catch {
+            print("❌ Error during import: \(error)")
             importMessage = "파일을 불러오는데 실패했습니다: \(error.localizedDescription)"
             showImportAlert = true
         }
