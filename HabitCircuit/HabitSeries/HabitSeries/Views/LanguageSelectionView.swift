@@ -4,6 +4,7 @@ struct LanguageSelectionView: View {
     @Binding var isPresented: Bool
     @StateObject private var localizationManager = LocalizationManager.shared
     @State private var selectedLanguage: AppLanguage
+    @State private var showRestartAlert = false
 
     init(isPresented: Binding<Bool>) {
         self._isPresented = isPresented
@@ -16,13 +17,12 @@ struct LanguageSelectionView: View {
                 ForEach(AppLanguage.allCases, id: \.self) { language in
                     Button(action: {
                         selectedLanguage = language
+
+                        // Save language change
                         localizationManager.currentLanguage = language
 
-                        // Delay to allow UI to update, then restart app
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            // Restart the app by exiting and letting user reopen
-                            exit(0)
-                        }
+                        // Show restart alert
+                        showRestartAlert = true
                     }) {
                         HStack {
                             Text(language.flag)
@@ -51,6 +51,19 @@ struct LanguageSelectionView: View {
                         isPresented = false
                     }
                 }
+            }
+            .alert(selectedLanguage == .korean ? "언어가 변경되었습니다" : "Language Changed", isPresented: $showRestartAlert) {
+                Button(selectedLanguage == .korean ? "앱 재시작" : "Restart App", role: .destructive) {
+                    // Exit app - user will need to manually restart
+                    exit(0)
+                }
+                Button(selectedLanguage == .korean ? "나중에" : "Later", role: .cancel) {
+                    isPresented = false
+                }
+            } message: {
+                Text(selectedLanguage == .korean ?
+                    "언어 변경을 완전히 적용하려면 앱을 재시작해야 합니다." :
+                    "Please restart the app to fully apply the language change.")
             }
         }
     }
