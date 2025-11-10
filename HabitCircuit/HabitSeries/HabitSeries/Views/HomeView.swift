@@ -13,10 +13,15 @@ struct HomeView: View {
 
     private var navigationTitle: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale.current
+        // Set locale based on current language
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        formatter.locale = Locale(identifier: currentLanguage == .korean ? "ko_KR" : "en_US")
         formatter.dateFormat = L("date.format.month.day")
         let dateString = formatter.string(from: Date())
-        return "\(dateString) \(viewModel.selectedDay.displayName)"
+
+        // Always show today's day name, not the selected day
+        let today = DayOfWeek.today
+        return "\(dateString) \(today.displayName)"
     }
 
     var body: some View {

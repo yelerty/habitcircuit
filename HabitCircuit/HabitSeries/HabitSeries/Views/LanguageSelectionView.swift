@@ -18,12 +18,10 @@ struct LanguageSelectionView: View {
                         selectedLanguage = language
                         localizationManager.currentLanguage = language
 
-                        // Delay to allow UI to update
+                        // Delay to allow UI to update, then restart app
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            isPresented = false
-
-                            // Force app to refresh by posting notification
-                            NotificationCenter.default.post(name: NSNotification.Name("LanguageChanged"), object: nil)
+                            // Restart the app by exiting and letting user reopen
+                            exit(0)
                         }
                     }) {
                         HStack {
