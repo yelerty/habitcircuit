@@ -553,6 +553,31 @@ struct TimeRoutineBoxView: View {
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 0.5) {
+                    print("🟠 Long press on time box header: \(timeType.rawValue)")
+
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+
+                    // Get the first routine's day
+                    if let firstRoutine = routinesForTimeType.first {
+                        if let day = DayOfWeek(rawValue: firstRoutine.dayOfWeek) {
+                            viewModel.selectedDay = day
+                            print("🟠 Switched to day: \(day.rawValue)")
+                        }
+                    }
+
+                    // Switch to this time type
+                    viewModel.changeTimeType(timeType)
+                    print("🟠 Switched to time type: \(timeType.rawValue)")
+
+                    // Small delay to ensure state updates
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        showEditScreen = true
+                        print("🟠 Opening edit screen from header")
+                    }
+                }
 
                 // Progress Bar
                 ProgressView(value: progressPercentage)
