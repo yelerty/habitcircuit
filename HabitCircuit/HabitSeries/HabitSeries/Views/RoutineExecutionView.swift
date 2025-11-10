@@ -127,7 +127,7 @@ struct RoutineExecutionView: View {
                                 .lineLimit(3)
 
                             // Subtle hint
-                            Text("집중하세요")
+                            Text(L("execution.focus"))
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.4))
                         }
@@ -160,7 +160,7 @@ struct RoutineExecutionView: View {
                                     Image(systemName: "checkmark.circle")
                                         .font(.caption)
 
-                                    Text("완료")
+                                    Text(L("execution.complete.button"))
                                         .font(.caption)
                                 }
                                 .foregroundColor(.white.opacity(0.4))
@@ -180,13 +180,13 @@ struct RoutineExecutionView: View {
                 }
             }
         }
-        .alert("루틴 종료", isPresented: $showExitConfirmation) {
-            Button("계속하기", role: .cancel) { }
-            Button("종료", role: .destructive) {
+        .alert(L("execution.exit.title"), isPresented: $showExitConfirmation) {
+            Button(L("execution.continue"), role: .cancel) { }
+            Button(L("execution.exit"), role: .destructive) {
                 isPresented = false
             }
         } message: {
-            Text("루틴 실행을 종료하시겠습니까?\n진행 상황은 저장됩니다.")
+            Text(L("execution.exit.message"))
         }
     }
 
@@ -248,12 +248,12 @@ struct CompletionView: View {
                 }
 
                 VStack(spacing: 12) {
-                    Text("모든 루틴 완료!")
+                    Text(L("execution.all.complete"))
                         .font(.system(size: 32, weight: .bold))
                         .scaleEffect(titleScale)
                         .opacity(titleOpacity)
 
-                    Text(viewModel.selectedDay.rawValue + " 루틴을 모두 완료했습니다")
+                    Text(String(format: L("execution.all.complete.message"), viewModel.selectedDay.displayName))
                         .font(.body)
                         .foregroundColor(.gray)
                         .opacity(titleOpacity)
@@ -264,7 +264,7 @@ struct CompletionView: View {
                             .font(.system(size: 40))
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("\(streakManager.currentStreak)일 연속")
+                            Text(String(format: L("execution.streak"), "\(streakManager.currentStreak)"))
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.orange)
 
@@ -289,7 +289,7 @@ struct CompletionView: View {
 
             // Routine Summary
             VStack(alignment: .leading, spacing: 12) {
-                Text("완료한 루틴")
+                Text(L("execution.completed.routines"))
                     .font(.headline)
                     .padding(.horizontal)
 
@@ -323,7 +323,7 @@ struct CompletionView: View {
                 generator.impactOccurred()
                 isPresented = false
             }) {
-                Text("완료")
+                Text(L("execution.complete.button"))
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -410,12 +410,12 @@ struct TransitionView: View {
                 .opacity(opacity)
 
                 VStack(spacing: 16) {
-                    Text("\(timeType.rawValue) 루틴 완료!")
+                    Text(String(format: L("execution.timetype.complete"), timeType.displayName))
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("다음 시간대로 이동하시겠습니까?")
+                    Text(L("execution.next.timetype"))
                         .font(.body)
                         .foregroundColor(.white.opacity(0.7))
                 }
@@ -430,7 +430,7 @@ struct TransitionView: View {
                         generator.impactOccurred()
                         onContinue()
                     }) {
-                        Text("계속하기")
+                        Text(L("execution.continue"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -446,7 +446,7 @@ struct TransitionView: View {
                         generator.impactOccurred()
                         onFinish()
                     }) {
-                        Text("오늘은 여기까지")
+                        Text(L("execution.today.done"))
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.6))
                             .frame(maxWidth: .infinity)

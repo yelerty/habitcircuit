@@ -21,11 +21,11 @@ struct TimeGuideView: View {
             VStack(spacing: 24) {
                 // Title
                 VStack(spacing: 8) {
-                    Text("⏰ 루틴 실행 시간")
+                    Text(L("time.guide.execution.time"))
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text("각 시간대에 맞춰 루틴을 실행하세요")
+                    Text(L("time.guide.subtitle"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -38,21 +38,21 @@ struct TimeGuideView: View {
                     TimeSlotRow(
                         icon: "sunrise.fill",
                         color: .orange,
-                        title: "아침 루틴",
+                        title: L("time.guide.morning.routine"),
                         time: timeSlotManager.getTimeRangeString(for: .morning)
                     )
 
                     TimeSlotRow(
                         icon: "sun.max.fill",
                         color: .yellow,
-                        title: "점심 루틴",
+                        title: L("time.guide.afternoon.routine"),
                         time: timeSlotManager.getTimeRangeString(for: .afternoon)
                     )
 
                     TimeSlotRow(
                         icon: "moon.stars.fill",
                         color: .indigo,
-                        title: "저녁 루틴",
+                        title: L("time.guide.evening.routine"),
                         time: timeSlotManager.getTimeRangeString(for: .evening)
                     )
                 }
@@ -64,7 +64,7 @@ struct TimeGuideView: View {
                         isPresented = false
                     }
                 }) {
-                    Text("확인")
+                    Text(L("ok"))
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -137,7 +137,7 @@ struct TimeGuideView: View {
                 Image(systemName: "clock.fill")
                     .font(.system(size: 32))
                     .foregroundColor(.blue)
-                Text("24시간")
+                Text(L("time.guide.24hours"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

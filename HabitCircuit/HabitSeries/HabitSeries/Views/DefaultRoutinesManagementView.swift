@@ -27,14 +27,14 @@ struct DefaultRoutinesManagementView: View {
                         HStack {
                             Image(systemName: "plus.circle.fill")
                                 .foregroundColor(.blue)
-                            Text("새 예시 루틴 추가")
+                            Text(L("default.routines.add.new"))
                                 .foregroundColor(.blue)
                         }
                     }
                 } header: {
-                    Label("내가 추가한 예시 루틴", systemImage: "star.fill")
+                    Label(L("default.routines.my.examples"), systemImage: "star.fill")
                 } footer: {
-                    Text("루틴 편집 화면에서 이 예시들을 빠르게 추가할 수 있습니다.")
+                    Text(L("default.routines.info"))
                 }
 
                 // Built-in Examples Section
@@ -49,33 +49,33 @@ struct DefaultRoutinesManagementView: View {
                         }
                     }
                 } header: {
-                    Label("기본 제공 예시 루틴", systemImage: "list.bullet")
+                    Label(L("default.routines.provided"), systemImage: "list.bullet")
                 } footer: {
-                    Text("기본 제공 예시는 삭제할 수 없습니다.")
+                    Text(L("default.routines.cannot.delete"))
                 }
             }
-            .navigationTitle("예시 루틴 관리")
+            .navigationTitle(L("default.routines.management"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("완료") {
+                    Button(L("done")) {
                         dismiss()
                     }
                 }
             }
-            .alert("새 예시 루틴 추가", isPresented: $showingAddAlert) {
-                TextField("루틴 이름", text: $newRoutineName)
-                Button("취소", role: .cancel) {
+            .alert(L("default.routines.add.title"), isPresented: $showingAddAlert) {
+                TextField(L("routine.name"), text: $newRoutineName)
+                Button(L("cancel"), role: .cancel) {
                     newRoutineName = ""
                 }
-                Button("추가") {
+                Button(L("routine.add")) {
                     if !newRoutineName.trimmingCharacters(in: .whitespaces).isEmpty {
                         defaultRoutines.addCustomRoutine(newRoutineName)
                         newRoutineName = ""
                     }
                 }
             } message: {
-                Text("추가할 예시 루틴의 이름을 입력하세요.")
+                Text(L("default.routines.add.message"))
             }
         }
     }

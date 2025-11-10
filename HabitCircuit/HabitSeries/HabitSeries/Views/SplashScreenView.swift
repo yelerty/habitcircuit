@@ -48,7 +48,7 @@ struct SplashScreenView: View {
                     .opacity(opacity)
 
                 // Tagline
-                Text("루틴으로 만드는 습관")
+                Text(L("splash.subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.9))
                     .opacity(opacity)
@@ -87,7 +87,7 @@ struct SplashScreenView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "hand.tap.fill")
                                 .font(.caption)
-                            Text("화면을 터치하여 시작하기")
+                            Text(L("splash.tap.to.start"))
                                 .font(.subheadline)
                         }
                         .foregroundColor(.white)

@@ -148,3 +148,54 @@
 /* Web Sharing */
 "web.share.title" = "Share on Web";
 "web.share.description" = "Share your routines on the web and exchange with others.";
+
+/* Splash Screen */
+"splash.subtitle" = "Build habits with routines";
+"splash.tap.to.start" = "Tap to start";
+
+/* Saved Routines View */
+"saved.routines.slot" = "Routine Save Slots";
+"saved.routines.usage" = "%@/5 used";
+"saved.routines.full" = "Storage slots are full. Please delete an existing slot and try again.";
+"saved.routines.save.current.routine" = "Save Current Routines";
+"saved.routines.save.title" = "Save Routines";
+"saved.routines.save.message" = "Save all routines from all days";
+"saved.routines.title.input" = "Enter title";
+"saved.routines.load.title" = "Load Routines";
+"saved.routines.load.confirm" = "⚠️ All current routines will be deleted\nand replaced with saved routines.\n\nContinue?";
+"saved.routines.empty.title" = "No saved routines";
+"saved.routines.empty.message" = "Save current routines to\nload them later";
+"saved.routines.load.button" = "Load";
+
+/* Routine Execution View */
+"execution.focus" = "Focus";
+"execution.complete.button" = "Complete";
+"execution.exit.title" = "Exit Routine";
+"execution.continue" = "Continue";
+"execution.exit" = "Exit";
+"execution.exit.message" = "Do you want to exit the routine?\nProgress will be saved.";
+"execution.all.complete" = "All Routines Complete!";
+"execution.all.complete.message" = "Completed all %@ routines";
+"execution.streak" = "%@ day streak";
+"execution.completed.routines" = "Completed Routines";
+"execution.timetype.complete" = "%@ Routines Complete!";
+"execution.next.timetype" = "Move to next time slot?";
+"execution.today.done" = "That's all for today";
+
+/* Default Routines Management */
+"default.routines.add.new" = "Add New Example Routine";
+"default.routines.my.examples" = "My Example Routines";
+"default.routines.info" = "You can quickly add these examples from the routine edit screen.";
+"default.routines.provided" = "Provided Example Routines";
+"default.routines.cannot.delete" = "Provided examples cannot be deleted.";
+"default.routines.management" = "Example Routines Management";
+"default.routines.add.title" = "Add New Example Routine";
+"default.routines.add.message" = "Enter the name of the example routine to add.";
+
+/* Time Guide */
+"time.guide.execution.time" = "⏰ Routine Execution Time";
+"time.guide.subtitle" = "Execute routines according to each time slot";
+"time.guide.morning.routine" = "Morning Routine";
+"time.guide.afternoon.routine" = "Afternoon Routine";
+"time.guide.evening.routine" = "Evening Routine";
+"time.guide.24hours" = "24 hours";

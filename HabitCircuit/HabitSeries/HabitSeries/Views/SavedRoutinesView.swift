@@ -20,9 +20,9 @@ struct SavedRoutinesView: View {
                 // Header Info
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("루틴 저장 슬롯")
+                        Text(L("saved.routines.slot"))
                             .font(.headline)
-                        Text("\(savedRoutineManager.savedSlots.count)/5 사용 중")
+                        Text(String(format: L("saved.routines.usage"), "\(savedRoutineManager.savedSlots.count)"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -30,13 +30,13 @@ struct SavedRoutinesView: View {
 
                     Button(action: {
                         if savedRoutineManager.isFull {
-                            alertMessage = "저장 슬롯이 가득 찼습니다. 기존 슬롯을 삭제하고 다시 시도해주세요."
+                            alertMessage = L("saved.routines.full")
                             showAlert = true
                         } else {
                             showSaveDialog = true
                         }
                     }) {
-                        Label("현재 루틴 저장", systemImage: "square.and.arrow.down")
+                        Label(L("saved.routines.save.current.routine"), systemImage: "square.and.arrow.down")
                             .font(.subheadline)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
@@ -57,7 +57,7 @@ struct SavedRoutinesView: View {
                 }) {
                     HStack {
                         Image(systemName: "trash.fill")
-                        Text("현재 루틴 모두 삭제")
+                        Text(L("saved.routines.delete.all"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
@@ -79,10 +79,10 @@ struct SavedRoutinesView: View {
                         Image(systemName: "tray")
                             .font(.system(size: 60))
                             .foregroundColor(.gray)
-                        Text("저장된 루틴이 없습니다")
+                        Text(L("saved.routines.empty.title"))
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        Text("현재 루틴을 저장하여\n나중에 불러올 수 있습니다")
+                        Text(L("saved.routines.empty.message"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -106,38 +106,38 @@ struct SavedRoutinesView: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("저장된 루틴")
+            .navigationTitle(L("saved.routines.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("완료") {
+                    Button(L("done")) {
                         dismiss()
                     }
                 }
             }
-            .alert("루틴 저장", isPresented: $showSaveDialog) {
-                TextField("제목 입력", text: $saveTitle)
-                Button("저장") {
+            .alert(L("saved.routines.save.title"), isPresented: $showSaveDialog) {
+                TextField(L("saved.routines.title.input"), text: $saveTitle)
+                Button(L("save")) {
                     saveCurrentRoutines()
                 }
-                Button("취소", role: .cancel) {
+                Button(L("cancel"), role: .cancel) {
                     saveTitle = ""
                 }
             } message: {
-                Text("현재 모든 요일의 모든 루틴을 저장합니다")
+                Text(L("saved.routines.save.message"))
             }
-            .alert("루틴 불러오기", isPresented: $showLoadConfirm) {
-                Button("불러오기", role: .destructive) {
+            .alert(L("saved.routines.load.title"), isPresented: $showLoadConfirm) {
+                Button(L("saved.routines.load.button"), role: .destructive) {
                     if let slotNumber = selectedSlotToLoad {
                         loadRoutines(from: slotNumber)
                     }
                 }
-                Button("취소", role: .cancel) {}
+                Button(L("cancel"), role: .cancel) {}
             } message: {
-                Text("⚠️ 현재 모든 루틴이 삭제되고\n저장된 루틴으로 교체됩니다.\n\n진행하시겠습니까?")
+                Text(L("saved.routines.load.confirm"))
             }
-            .alert("알림", isPresented: $showAlert) {
-                Button("확인", role: .cancel) {}
+            .alert(L("alert.title"), isPresented: $showAlert) {
+                Button(L("ok"), role: .cancel) {}
             } message: {
                 Text(alertMessage)
             }
