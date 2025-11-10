@@ -376,13 +376,16 @@ struct TimeSlotSummaryRow: View {
 
             Text(timeType.displayName)
                 .font(.body)
-                .frame(width: 60, alignment: .leading)
+                .frame(minWidth: 80, alignment: .leading)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
 
             Text(timeSlotManager.getTimeRangeString(for: timeType))
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 0)
         }
     }
 }
