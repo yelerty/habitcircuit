@@ -582,12 +582,27 @@ struct TimeRoutineBoxView: View {
                         .padding(.vertical, 4)
                         .contentShape(Rectangle())
                         .onLongPressGesture(minimumDuration: 0.5) {
+                            print("🔵 Long press detected on: \(routine.name)")
+                            print("🔵 Routine day: \(routine.dayOfWeek), time: \(routine.timeType.rawValue)")
+
                             let generator = UIImpactFeedbackGenerator(style: .medium)
                             generator.impactOccurred()
 
+                            // Switch to the routine's day of week
+                            if let day = DayOfWeek(rawValue: routine.dayOfWeek) {
+                                viewModel.selectedDay = day
+                                print("🔵 Switched to day: \(day.rawValue)")
+                            }
+
                             // Switch to the routine's time type before opening edit screen
                             viewModel.changeTimeType(routine.timeType)
-                            showEditScreen = true
+                            print("🔵 Switched to time type: \(routine.timeType.rawValue)")
+
+                            // Small delay to ensure state updates
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                showEditScreen = true
+                                print("🔵 Opening edit screen")
+                            }
                         }
                     }
                 }
