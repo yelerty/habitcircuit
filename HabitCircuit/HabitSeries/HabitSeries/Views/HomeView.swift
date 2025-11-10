@@ -13,10 +13,10 @@ struct HomeView: View {
 
     private var navigationTitle: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월 d일"
+        formatter.locale = Locale.current
+        formatter.dateFormat = L("date.format.month.day")
         let dateString = formatter.string(from: Date())
-        return "\(dateString) \(viewModel.selectedDay.rawValue)"
+        return "\(dateString) \(viewModel.selectedDay.displayName)"
     }
 
     var body: some View {
@@ -128,12 +128,12 @@ struct HomeView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "square.and.pencil")
                                     .foregroundColor(.blue)
-                                Text("우측 상단의")
+                                Text(L("home.tap.top.right"))
                                     .foregroundColor(.gray)
                                 Image(systemName: "square.and.pencil")
                                     .font(.title3)
                                     .foregroundColor(.blue)
-                                Text("버튼을 눌러")
+                                Text(L("home.button.press"))
                                     .foregroundColor(.gray)
                             }
                             .font(.body)
@@ -145,12 +145,12 @@ struct HomeView: View {
                         .multilineTextAlignment(.center)
                     }
 
-                    // 또는 구분선
+                    // Or divider
                     HStack {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
                             .frame(height: 1)
-                        Text("또는")
+                        Text(L("home.or"))
                             .font(.caption)
                             .foregroundColor(.gray)
                             .padding(.horizontal, 8)

@@ -76,7 +76,7 @@ class TimeSlotManager: ObservableObject {
         if range.end > 24 {
             // Convert 25 -> 1 AM, 26 -> 2 AM, 27 -> 3 AM (next day)
             let nextDayHour = range.end - 24
-            endString = formatHour(nextDayHour) + " (익일)"
+            endString = formatHour(nextDayHour) + " " + L("time.next.day")
         } else {
             endString = formatHour(range.end)
         }
@@ -86,15 +86,15 @@ class TimeSlotManager: ObservableObject {
 
     private func formatHour(_ hour: Int) -> String {
         if hour == 0 {
-            return "오전 12시(자정)"
+            return L("time.midnight")
         } else if hour == 24 {
-            return "오전 12시(자정)"
+            return L("time.midnight")
         } else if hour < 12 {
-            return "오전 \(hour)시"
+            return String(format: L("time.hour.format"), L("time.am"), hour)
         } else if hour == 12 {
-            return "오후 12시"
+            return L("time.noon")
         } else {
-            return "오후 \(hour - 12)시"
+            return String(format: L("time.hour.format"), L("time.pm"), hour - 12)
         }
     }
 
@@ -118,7 +118,7 @@ class TimeSlotManager: ObservableObject {
         if canRun {
             return (true, "")
         } else {
-            let message = "\(timeType.rawValue) 루틴은 \(getTimeRangeString(for: timeType))에만 실행할 수 있습니다."
+            let message = String(format: L("time.range.restriction"), timeType.displayName, getTimeRangeString(for: timeType))
             return (false, message)
         }
     }

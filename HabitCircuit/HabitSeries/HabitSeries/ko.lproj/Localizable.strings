@@ -199,3 +199,18 @@
 "time.guide.afternoon.routine" = "점심 루틴";
 "time.guide.evening.routine" = "저녁 루틴";
 "time.guide.24hours" = "24시간";
+
+/* Date and Time Formatting */
+"date.format.month.day" = "M월 d일";
+"time.am" = "오전";
+"time.pm" = "오후";
+"time.midnight" = "오전 12시(자정)";
+"time.noon" = "오후 12시";
+"time.hour.format" = "%@ %d시";
+"time.next.day" = "(익일)";
+"time.range.restriction" = "%@ 루틴은 %@에만 실행할 수 있습니다.";
+
+/* HomeView additional */
+"home.tap.top.right" = "우측 상단의";
+"home.button.press" = "버튼을 눌러";
+"home.or" = "또는";
