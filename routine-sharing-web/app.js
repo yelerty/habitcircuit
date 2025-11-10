@@ -11,6 +11,7 @@ import {
     orderBy,
     doc,
     updateDoc,
+    deleteDoc,
     increment,
     serverTimestamp
 } from './firebase.js';
@@ -25,7 +26,7 @@ const TIME_TYPES = {
 
 // ===== Data Schema Matching iOS App =====
 // This matches the RoutineExportData structure from iOS
-const createRoutineDocument = (dayOfWeek, timeType, routines, userId, title = '', uploadId = '') => {
+const createRoutineDocument = (dayOfWeek, timeType, routines, userId, title = '', uploadId = '', passwordHash = '') => {
     return {
         version: '1.0',
         dayOfWeek: dayOfWeek,
@@ -39,6 +40,7 @@ const createRoutineDocument = (dayOfWeek, timeType, routines, userId, title = ''
         createdAt: serverTimestamp(),
         likes: 0,
         title: title || '', // Optional title
+        passwordHash: passwordHash, // For edit authentication
         metadata: {
             platform: 'Web',
             uploadDate: new Date().toISOString()
@@ -46,14 +48,26 @@ const createRoutineDocument = (dayOfWeek, timeType, routines, userId, title = ''
     };
 };
 
+// ===== Admin Configuration =====
+const ADMIN_PASSWORD = '1723'; // 관리자 비밀번호 (변경 가능)
+
 // ===== State Management =====
 let currentRoutines = [];
 let currentFilters = {
-    day: '',
-    time: '',
     sort: 'recent'
 };
 let pendingUpload = null;
+let currentUserRoutines = {}; // Store routines by userId for download
+let uploadPassword = ''; // Store password for current upload session
+
+// ===== Simple Password Hash =====
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 // ===== DOM Elements =====
 const elements = {
@@ -63,8 +77,6 @@ const elements = {
     uploadView: document.getElementById('upload-view'),
 
     // Filters
-    dayFilter: document.getElementById('day-filter'),
-    timeFilter: document.getElementById('time-filter'),
     sortFilter: document.getElementById('sort-filter'),
 
     // Routines Container
@@ -87,7 +99,11 @@ const elements = {
     manualDay: document.getElementById('manual-day'),
     manualTime: document.getElementById('manual-time'),
     manualRoutines: document.getElementById('manual-routines'),
-    manualSubmitBtn: document.getElementById('manual-submit-btn'),
+    manualPassword: document.getElementById('manual-password'),
+    manualAddBtn: document.getElementById('manual-add-btn'),
+    manualDoneBtn: document.getElementById('manual-done-btn'),
+    addedRoutinesList: document.getElementById('added-routines-list'),
+    addedRoutinesContent: document.getElementById('added-routines-content'),
 
     // Preview title
     previewTitle: document.getElementById('preview-title'),
@@ -168,8 +184,6 @@ function initializeEventListeners() {
     });
 
     // Filters
-    elements.dayFilter.addEventListener('change', handleFilterChange);
-    elements.timeFilter.addEventListener('change', handleFilterChange);
     elements.sortFilter.addEventListener('change', handleFilterChange);
 
     // Upload method tabs
@@ -186,6 +200,7 @@ function initializeEventListeners() {
 
     // Manual form
     elements.manualForm.addEventListener('submit', handleManualSubmit);
+    elements.manualDoneBtn.addEventListener('click', handleManualDone);
 
     // Upload preview
     elements.confirmUploadBtn.addEventListener('click', confirmUpload);
@@ -237,13 +252,6 @@ async function loadRoutines() {
         // Build query
         let q = collection(db, 'routines');
         const constraints = [];
-
-        if (currentFilters.day) {
-            constraints.push(where('dayOfWeek', '==', currentFilters.day));
-        }
-        if (currentFilters.time) {
-            constraints.push(where('timeType', '==', currentFilters.time));
-        }
 
         // Sort
         if (currentFilters.sort === 'popular') {
@@ -314,6 +322,54 @@ async function likeRoutine(routineId) {
     }
 }
 
+async function likeUserRoutines(userId, routines) {
+    try {
+        // Check if already liked today
+        const likedToday = checkIfLikedToday(userId);
+        if (likedToday) {
+            showToast('오늘 이미 좋아요를 누르셨습니다. 내일 다시 시도해주세요!', 'error');
+            return;
+        }
+
+        // Like only the first routine (representing the whole user's routine set)
+        const firstRoutine = routines[0];
+        const routineRef = doc(db, 'routines', firstRoutine.id);
+        await updateDoc(routineRef, {
+            likes: increment(1)
+        });
+
+        // Update local state for the first routine
+        const localRoutine = currentRoutines.find(r => r.id === firstRoutine.id);
+        if (localRoutine) {
+            localRoutine.likes = (localRoutine.likes || 0) + 1;
+        }
+
+        // Mark as liked today
+        markAsLikedToday(userId);
+
+        renderRoutines();
+        showToast('❤️ 좋아요!', 'success');
+    } catch (error) {
+        console.error('Error liking routines:', error);
+        showToast('좋아요 처리 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// Check if user already liked this routine today
+function checkIfLikedToday(userId) {
+    const today = new Date().toDateString();
+    const likedData = JSON.parse(localStorage.getItem('likedRoutines') || '{}');
+    return likedData[userId] === today;
+}
+
+// Mark routine as liked today
+function markAsLikedToday(userId) {
+    const today = new Date().toDateString();
+    const likedData = JSON.parse(localStorage.getItem('likedRoutines') || '{}');
+    likedData[userId] = today;
+    localStorage.setItem('likedRoutines', JSON.stringify(likedData));
+}
+
 // ===== Render Functions =====
 function renderRoutines() {
     if (currentRoutines.length === 0) {
@@ -346,7 +402,15 @@ function renderRoutines() {
 
     // Add event listeners to user cards
     document.querySelectorAll('.user-card').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            // Check if click is on like button
+            if (e.target.closest('.total-likes')) {
+                e.stopPropagation();
+                const uploadKey = card.dataset.userId;
+                likeUserRoutines(uploadKey, groupedByUpload[uploadKey]);
+                return;
+            }
+
             const uploadKey = card.dataset.userId;
             showUserRoutines(uploadKey, groupedByUpload[uploadKey]);
         });
@@ -368,6 +432,15 @@ function createUserCard(userId, routines) {
     // Get title (use first routine's title, or default)
     const title = routines[0]?.title || '익명 사용자의 일주일 루틴';
 
+    // Check if already liked today
+    const likedToday = checkIfLikedToday(userId);
+    const heartStyle = likedToday
+        ? 'cursor: not-allowed; opacity: 0.5;'
+        : 'cursor: pointer; transition: transform 0.2s;';
+    const heartHover = likedToday
+        ? ''
+        : 'onmouseover="this.style.transform=\'scale(1.2)\'" onmouseout="this.style.transform=\'scale(1)\'"';
+
     return `
         <div class="user-card" data-user-id="${userId}">
             <div class="user-card-header">
@@ -379,13 +452,18 @@ function createUserCard(userId, routines) {
             </div>
             <div class="user-card-footer">
                 <span class="upload-date">${formatDate(latestDate)}</span>
-                <span class="total-likes">❤️ ${totalLikes}</span>
+                <span class="total-likes" style="${heartStyle}" ${heartHover}>
+                    ${likedToday ? '💔' : '❤️'} ${totalLikes}
+                </span>
             </div>
         </div>
     `;
 }
 
 function showUserRoutines(userId, routines) {
+    // Store for download function
+    currentUserRoutines[userId] = routines;
+
     // Group by day
     const groupedByDay = {};
     routines.forEach(routine => {
@@ -411,6 +489,23 @@ function showUserRoutines(userId, routines) {
             <div class="modal-routines">
                 ${html}
             </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn-secondary" style="flex: 1;" onclick="editUserRoutines('${userId}')">
+                    ✏️ 수정하기
+                </button>
+                <button class="btn-primary" style="flex: 1;" onclick="shareUserRoutines('${userId}')">
+                    📤 공유하기
+                </button>
+            </div>
+            <div style="margin-top: 12px;">
+                <button class="btn-secondary" style="width: 100%; background: var(--color-danger); color: white;" onclick="deleteUserRoutines('${userId}')">
+                    🗑️ 삭제하기
+                </button>
+            </div>
+            <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-tertiary); text-align: center;">
+                📤 공유하기를 누르면 HabitCircuit 앱으로<br>
+                바로 열거나 다른 곳에 공유할 수 있습니다
+            </p>
         </div>
     `;
 
@@ -586,9 +681,17 @@ function showRoutineDetail(routineId) {
                 </span>
             </div>
         </div>
-        <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="copyRoutineJSON('${routineId}')">
-            JSON 복사하기
-        </button>
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn-secondary" style="flex: 1;" onclick="copyRoutineJSON('${routineId}')">
+                📋 JSON 복사
+            </button>
+            <button class="btn-primary" style="flex: 1;" onclick="downloadRoutineJSON('${routineId}')">
+                📥 다운로드
+            </button>
+        </div>
+        <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-tertiary); text-align: center;">
+            다운로드한 파일을 HabitCircuit 앱에서 가져오기 할 수 있습니다
+        </p>
     `;
 
     elements.modal.classList.remove('hidden');
@@ -702,10 +805,15 @@ function handleManualSubmit(e) {
     const day = elements.manualDay.value;
     const time = elements.manualTime.value;
     const routinesText = elements.manualRoutines.value.trim();
-    const title = elements.manualTitle.value.trim(); // Get title from manual form
+    const password = elements.manualPassword.value;
 
-    if (!day || !time || !routinesText) {
+    if (!day || !time || !routinesText || !password) {
         showToast('모든 필드를 입력해주세요.', 'error');
+        return;
+    }
+
+    if (password.length !== 4 || !/^\d{4}$/.test(password)) {
+        showToast('비밀번호는 4자리 숫자여야 합니다.', 'error');
         return;
     }
 
@@ -719,19 +827,95 @@ function handleManualSubmit(e) {
         return;
     }
 
-    pendingUpload = [{
+    // Store password for this upload session (first time only)
+    if (!uploadPassword) {
+        uploadPassword = password;
+    } else if (uploadPassword !== password) {
+        showToast('처음 입력한 비밀번호와 같아야 합니다.', 'error');
+        return;
+    }
+
+    // Initialize pendingUpload if it doesn't exist
+    if (!pendingUpload) {
+        pendingUpload = [];
+    }
+
+    // Add the new routine to pending upload
+    pendingUpload.push({
         dayOfWeek: day,
         timeType: time,
         routines: routines.map((name, index) => ({
             name,
             order: index + 1
         }))
-    }];
+    });
 
-    // Set the title in preview input so it will be used during upload
+    // Clear the routines textarea for next input
+    elements.manualRoutines.value = '';
+
+    // Show success message
+    showToast(`${day} ${time} 루틴이 추가되었습니다!`, 'success');
+
+    // Update the added routines list
+    updateAddedRoutinesList();
+
+    // Enable the done button
+    elements.manualDoneBtn.disabled = false;
+}
+
+function handleManualDone() {
+    if (!pendingUpload || pendingUpload.length === 0) {
+        showToast('추가된 루틴이 없습니다.', 'error');
+        return;
+    }
+
+    // Get title from manual form
+    const title = elements.manualTitle.value.trim();
     elements.previewTitle.value = title;
 
     showUploadPreview(pendingUpload);
+}
+
+function updateAddedRoutinesList() {
+    if (!pendingUpload || pendingUpload.length === 0) {
+        elements.addedRoutinesList.classList.add('hidden');
+        return;
+    }
+
+    elements.addedRoutinesList.classList.remove('hidden');
+
+    const html = pendingUpload.map((item, index) => {
+        const timeIcon = TIME_TYPES[item.timeType]?.icon || '';
+        const routinesList = item.routines.map(r => r.name).join(', ');
+
+        return `
+            <div class="added-routine-item">
+                <div class="added-routine-header">
+                    <span class="added-routine-badge">${item.dayOfWeek} ${timeIcon} ${item.timeType}</span>
+                    <button class="btn-remove" onclick="removeAddedRoutine(${index})">✕</button>
+                </div>
+                <div class="added-routine-content">
+                    ${item.routines.map(r => `<span class="routine-tag">${r.name}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.addedRoutinesContent.innerHTML = html;
+}
+
+// Make removeAddedRoutine globally available
+window.removeAddedRoutine = function(index) {
+    if (pendingUpload && pendingUpload.length > index) {
+        const removed = pendingUpload.splice(index, 1)[0];
+        showToast(`${removed.dayOfWeek} ${removed.timeType} 루틴이 삭제되었습니다.`, 'info');
+        updateAddedRoutinesList();
+
+        // Disable done button if no routines left
+        if (pendingUpload.length === 0) {
+            elements.manualDoneBtn.disabled = true;
+        }
+    }
 }
 
 // ===== Upload Confirmation =====
@@ -792,6 +976,10 @@ async function confirmUpload() {
         const uploadId = `${user.uid}_${Date.now()}`;
         console.log('Upload ID:', uploadId);
 
+        // Hash the password
+        const passwordHash = await hashPassword(uploadPassword);
+        console.log('Password hashed');
+
         // Upload each routine group
         for (const group of pendingUpload) {
             console.log('Uploading group:', group.dayOfWeek, group.timeType);
@@ -802,7 +990,8 @@ async function confirmUpload() {
                 group.routines.map(r => r.name),
                 user.uid,
                 title,
-                uploadId
+                uploadId,
+                passwordHash
             );
 
             console.log('Document to upload:', routineDoc);
@@ -847,8 +1036,6 @@ function cancelUpload() {
 
 // ===== Filter Handlers =====
 function handleFilterChange() {
-    currentFilters.day = elements.dayFilter.value;
-    currentFilters.time = elements.timeFilter.value;
     currentFilters.sort = elements.sortFilter.value;
     loadRoutines();
 }
@@ -860,7 +1047,11 @@ function resetUploadForms() {
     elements.filePreview.classList.add('hidden');
     elements.manualForm.reset();
     elements.uploadPreview.classList.add('hidden');
+    elements.addedRoutinesList.classList.add('hidden');
+    elements.addedRoutinesContent.innerHTML = '';
+    elements.manualDoneBtn.disabled = true;
     pendingUpload = null;
+    uploadPassword = ''; // Reset password
 }
 
 function formatDate(timestamp) {
@@ -893,11 +1084,9 @@ function showToast(message, type = 'success') {
 }
 
 // ===== Global Functions for Modal =====
-window.copyRoutineJSON = function(routineId) {
-    const routine = currentRoutines.find(r => r.id === routineId);
-    if (!routine) return;
-
-    const exportData = {
+// Helper function to create iOS-compatible export data
+function createExportData(routine) {
+    return {
         version: routine.version || '1.0',
         exportDate: new Date().toISOString(),
         routines: routine.routines.map(r => ({
@@ -907,6 +1096,13 @@ window.copyRoutineJSON = function(routineId) {
             order: r.order
         }))
     };
+}
+
+window.copyRoutineJSON = function(routineId) {
+    const routine = currentRoutines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    const exportData = createExportData(routine);
 
     navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
         .then(() => {
@@ -917,3 +1113,201 @@ window.copyRoutineJSON = function(routineId) {
             showToast('복사 중 오류가 발생했습니다.', 'error');
         });
 };
+
+window.downloadRoutineJSON = function(routineId) {
+    const routine = currentRoutines.find(r => r.id === routineId);
+    if (!routine) return;
+
+    const exportData = createExportData(routine);
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    // Create blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    // Generate filename with date
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `HabitCircuit-${routine.dayOfWeek}-${routine.timeType}-${dateStr}.json`;
+    a.download = fileName;
+
+    // Trigger download
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('루틴이 다운로드되었습니다! 앱에서 가져오기 하세요.', 'success');
+    closeModal();
+};
+
+window.shareUserRoutines = async function(userId) {
+    const routines = currentUserRoutines[userId];
+    if (!routines || routines.length === 0) return;
+
+    // Convert all routines to export format
+    const allExportRoutines = [];
+    routines.forEach(routine => {
+        routine.routines.forEach(item => {
+            allExportRoutines.push({
+                name: item.name,
+                dayOfWeek: routine.dayOfWeek,
+                timeType: routine.timeType,
+                order: item.order
+            });
+        });
+    });
+
+    const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        routines: allExportRoutines
+    };
+
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    // Generate filename with date and title
+    const dateStr = new Date().toISOString().split('T')[0];
+    const title = (routines[0]?.title || '루틴모음').replace(/[^a-zA-Z0-9가-힣]/g, '-');
+    const fileName = `HabitCircuit-${title}-${dateStr}.json`;
+
+    // Create blob
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const file = new File([blob], fileName, { type: 'application/json' });
+
+    // Check if Web Share API is supported
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                title: '루틴 공유하기',
+                text: `${routines[0]?.title || '루틴'} - HabitCircuit`,
+                files: [file]
+            });
+            showToast('공유 완료!', 'success');
+            closeModal();
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Share failed:', error);
+                // Fallback to download
+                fallbackDownload(blob, fileName);
+            }
+        }
+    } else {
+        // Fallback to download for non-supporting browsers
+        fallbackDownload(blob, fileName);
+    }
+};
+
+// Fallback download function
+function fallbackDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+        showToast('다운로드 완료! Safari 다운로드 목록에서 파일을 HabitCircuit으로 열어주세요.', 'success');
+    } else {
+        showToast('다운로드 완료!', 'success');
+    }
+    closeModal();
+}
+
+window.editUserRoutines = function(userId) {
+    const routines = currentUserRoutines[userId];
+    if (!routines || routines.length === 0) return;
+
+    // Prompt for password
+    const password = prompt('수정하려면 비밀번호 4자리를 입력하세요:');
+    if (!password) return;
+
+    if (password.length !== 4 || !/^\d{4}$/.test(password)) {
+        showToast('비밀번호는 4자리 숫자여야 합니다.', 'error');
+        return;
+    }
+
+    // Verify password
+    hashPassword(password).then(async (inputHash) => {
+        const firstRoutine = routines[0];
+        if (firstRoutine.passwordHash !== inputHash) {
+            showToast('비밀번호가 일치하지 않습니다.', 'error');
+            return;
+        }
+
+        showToast('비밀번호 확인 완료! 수정 기능은 곧 추가됩니다.', 'success');
+        // TODO: Implement edit functionality
+        // For now, just show a message
+        alert('수정 기능은 현재 개발 중입니다.\n\n대신 다음 방법을 사용하세요:\n1. 📥 다운로드 버튼으로 루틴 다운로드\n2. 삭제 후 재업로드');
+    }).catch(error => {
+        console.error('Password verification error:', error);
+        showToast('비밀번호 확인 중 오류가 발생했습니다.', 'error');
+    });
+};
+
+window.deleteUserRoutines = function(userId) {
+    const routines = currentUserRoutines[userId];
+    if (!routines || routines.length === 0) return;
+
+    // Confirm deletion
+    const confirmDelete = confirm('정말로 이 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.');
+    if (!confirmDelete) return;
+
+    // Prompt for password
+    const password = prompt('삭제하려면 비밀번호 4자리를 입력하세요:');
+    if (!password) return;
+
+    if (password.length !== 4 || !/^\d{4}$/.test(password)) {
+        showToast('비밀번호는 4자리 숫자여야 합니다.', 'error');
+        return;
+    }
+
+    // Check if admin password
+    if (password === ADMIN_PASSWORD) {
+        // Admin access - delete without verification
+        performDeletion(routines);
+        return;
+    }
+
+    // Verify user password and delete
+    hashPassword(password).then(async (inputHash) => {
+        const firstRoutine = routines[0];
+        if (firstRoutine.passwordHash !== inputHash) {
+            showToast('비밀번호가 일치하지 않습니다.', 'error');
+            return;
+        }
+
+        // Password verified, proceed with deletion
+        performDeletion(routines);
+    }).catch(error => {
+        console.error('Password verification error:', error);
+        showToast('비밀번호 확인 중 오류가 발생했습니다.', 'error');
+    });
+};
+
+async function performDeletion(routines) {
+    try {
+        showToast('루틴 삭제 중...', 'success');
+
+        // Delete all routines for this user
+        const deletePromises = routines.map(routine =>
+            deleteDoc(doc(db, 'routines', routine.id))
+        );
+
+        await Promise.all(deletePromises);
+
+        showToast(`${routines.length}개의 루틴이 삭제되었습니다.`, 'success');
+        closeModal();
+
+        // Refresh the routines list
+        loadRoutines();
+    } catch (error) {
+        console.error('Error deleting routines:', error);
+        showToast('루틴 삭제 중 오류가 발생했습니다.', 'error');
+    }
+}

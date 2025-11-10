@@ -2,14 +2,18 @@ import Foundation
 import SwiftUI
 
 enum RoutineCategory: String, CaseIterable, Codable {
-    case health = "건강"
-    case study = "학습"
-    case work = "업무"
-    case household = "청소/가사"
-    case selfCare = "자기관리"
-    case hobby = "취미"
-    case social = "사회활동"
-    case other = "기타"
+    case health = "health"
+    case study = "study"
+    case work = "work"
+    case household = "household"
+    case selfCare = "selfcare"
+    case hobby = "hobby"
+    case social = "social"
+    case other = "other"
+
+    var displayName: String {
+        return L("category.\(self.rawValue)")
+    }
 
     var icon: String {
         switch self {
@@ -38,15 +42,6 @@ enum RoutineCategory: String, CaseIterable, Codable {
     }
 
     var description: String {
-        switch self {
-        case .health: return "운동, 식사, 수면 등"
-        case .study: return "독서, 강의, 학습 등"
-        case .work: return "업무, 프로젝트, 회의 등"
-        case .household: return "청소, 요리, 세탁 등"
-        case .selfCare: return "명상, 일기, 관리 등"
-        case .hobby: return "그림, 음악, 취미 등"
-        case .social: return "모임, 친구, 가족 등"
-        case .other: return "분류되지 않은 루틴"
-        }
+        return L("category.\(self.rawValue).desc")
     }
 }

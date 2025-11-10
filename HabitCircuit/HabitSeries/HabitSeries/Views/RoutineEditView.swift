@@ -40,7 +40,7 @@ struct RoutineEditView: View {
 
                                 // Routine count badge
                                 if routineCount > 0 {
-                                    Text("\(routineCount)개")
+                                    Text(String(format: L("routine.count"), "\(routineCount)"))
                                         .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(viewModel.selectedTimeType == timeType ? .white.opacity(0.8) : timeTypeColor(timeType))
                                 }
@@ -74,7 +74,7 @@ struct RoutineEditView: View {
                         HStack(spacing: 8) {
                             Image(systemName: selectedCategory.icon)
                                 .foregroundColor(selectedCategory.color)
-                            Text(selectedCategory.rawValue)
+                            Text(selectedCategory.displayName)
                                 .font(.subheadline)
                                 .foregroundColor(.primary)
                             Spacer()
@@ -95,7 +95,7 @@ struct RoutineEditView: View {
                     }
 
                     HStack {
-                        TextField("새 루틴 추가", text: $newRoutineName)
+                        TextField(L("routine.new.add"), text: $newRoutineName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .onSubmit {
                                 addRoutine()
@@ -126,7 +126,7 @@ struct RoutineEditView: View {
                                             Image(systemName: category.icon)
                                                 .font(.title3)
                                                 .foregroundColor(selectedCategory == category ? .white : category.color)
-                                            Text(category.rawValue)
+                                            Text(category.displayName)
                                                 .font(.caption2)
                                                 .foregroundColor(selectedCategory == category ? .white : .primary)
                                         }
@@ -145,7 +145,7 @@ struct RoutineEditView: View {
                     }
 
                     HStack {
-                        Text("추가한 순서대로 루틴이 진행됩니다")
+                        Text(L("routine.order.info"))
                             .font(.caption)
                             .foregroundColor(.gray)
 
@@ -159,7 +159,7 @@ struct RoutineEditView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "lightbulb.fill")
                                     .font(.caption)
-                                Text("예시 보기")
+                                Text(L("routine.example.view"))
                                     .font(.caption)
                             }
                             .foregroundColor(.orange)
@@ -181,11 +181,11 @@ struct RoutineEditView: View {
                             .font(.system(size: 50))
                             .foregroundColor(.gray)
 
-                        Text("루틴을 추가해주세요")
+                        Text(L("routine.add.please"))
                             .font(.headline)
                             .foregroundColor(.gray)
 
-                        Text("위 입력창에서 루틴을 추가하고\n순서를 드래그로 변경할 수 있습니다")
+                        Text(L("routine.add.info"))
                             .font(.caption)
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -209,7 +209,7 @@ struct RoutineEditView: View {
                                                     VStack(spacing: 4) {
                                                         Image(systemName: category.icon)
                                                             .font(.title3)
-                                                        Text(category.rawValue)
+                                                        Text(category.displayName)
                                                             .font(.caption2)
                                                     }
                                                     .foregroundColor(editingCategory == category ? .white : category.color)
@@ -227,10 +227,10 @@ struct RoutineEditView: View {
 
                                     // Name and action buttons
                                     HStack {
-                                        TextField("루틴 이름", text: $editingText)
+                                        TextField(L("routine.name"), text: $editingText)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                                        Button("저장") {
+                                        Button(L("save")) {
                                             let generator = UIImpactFeedbackGenerator(style: .medium)
                                             generator.impactOccurred()
                                             saveEdit()
@@ -238,7 +238,7 @@ struct RoutineEditView: View {
                                         .foregroundColor(.blue)
                                         .buttonStyle(BorderlessButtonStyle())
 
-                                        Button("취소") {
+                                        Button(L("cancel")) {
                                             let generator = UIImpactFeedbackGenerator(style: .light)
                                             generator.impactOccurred()
                                             cancelEdit()
@@ -288,11 +288,11 @@ struct RoutineEditView: View {
                     .id(viewModel.routines.map { $0.id })
                 }
             }
-            .navigationTitle("\(viewModel.selectedDay.rawValue) 루틴")
+            .navigationTitle("\(viewModel.selectedDay.displayName) \(L("home.title"))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("완료") {
+                    Button(L("done")) {
                         let generator = UIImpactFeedbackGenerator(style: .medium)
                         generator.impactOccurred()
                         dismiss()
@@ -307,20 +307,20 @@ struct RoutineEditView: View {
             .sheet(isPresented: $showDefaultRoutines) {
                 DefaultRoutinesSheet(onSelect: { routineName in
                     viewModel.addRoutine(name: routineName)
-                    showSuccessToast("루틴이 추가되었습니다")
+                    showSuccessToast(L("toast.routine.added"))
                 })
             }
-            .alert("루틴 삭제", isPresented: $showDeleteConfirmation) {
-                Button("취소", role: .cancel) {
+            .alert(L("routine.delete"), isPresented: $showDeleteConfirmation) {
+                Button(L("cancel"), role: .cancel) {
                     routineToDelete = nil
                 }
-                Button("삭제", role: .destructive) {
+                Button(L("delete"), role: .destructive) {
                     if let offsets = routineToDelete {
                         performDelete(at: offsets)
                     }
                 }
             } message: {
-                Text("이 루틴을 삭제하시겠습니까?\n삭제된 루틴은 복구할 수 없습니다.")
+                Text(L("routine.delete.warning"))
             }
             .toast(isShowing: $showToast, message: toastMessage, type: toastType)
         }
@@ -334,7 +334,7 @@ struct RoutineEditView: View {
         newRoutineName = ""
 
         // Show success toast
-        showSuccessToast("'\(trimmedName)' 루틴이 추가되었습니다")
+        showSuccessToast(L("toast.routine.added"))
     }
 
     private func deleteRoutine(at offsets: IndexSet) {
@@ -352,7 +352,7 @@ struct RoutineEditView: View {
         print("🎯 After delete - viewModel.routines.count: \(viewModel.routines.count)")
 
         // Show success toast
-        showSuccessToast("'\(routineNames)' 루틴이 삭제되었습니다")
+        showSuccessToast(L("toast.routine.deleted"))
         routineToDelete = nil
     }
 
@@ -375,7 +375,7 @@ struct RoutineEditView: View {
 
         if !trimmedName.isEmpty {
             viewModel.updateRoutine(id: routine.id, newName: trimmedName, newCategory: editingCategory)
-            showSuccessToast("루틴이 수정되었습니다")
+            showSuccessToast(L("toast.routine.updated"))
         }
 
         print("🎯 After update - viewModel.routines.count: \(viewModel.routines.count)")
@@ -426,7 +426,7 @@ struct DefaultRoutinesSheet: View {
                 // Add Custom Routine Section
                 VStack(spacing: 8) {
                     HStack {
-                        TextField("나만의 루틴 추가", text: $newRoutineName)
+                        TextField(L("routine.my.add"), text: $newRoutineName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .onSubmit {
                                 addCustomRoutine()

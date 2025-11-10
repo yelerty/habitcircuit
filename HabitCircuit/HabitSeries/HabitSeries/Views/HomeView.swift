@@ -70,7 +70,7 @@ struct HomeView: View {
                             startRoutine()
                         }
                     }) {
-                        Text(viewModel.allRoutinesCompleted ? "다시 시작" : "루틴 시작")
+                        Text(viewModel.allRoutinesCompleted ? L("home.restart") : L("home.start.routine"))
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -85,7 +85,7 @@ struct HomeView: View {
                     .padding()
 
                     if !canStartNow {
-                        Text("현재는 루틴 실행 시간이 아닙니다")
+                        Text(L("home.not.routine.time"))
                             .font(.caption)
                             .foregroundColor(.gray)
                             .padding(.top, -8)
@@ -93,7 +93,7 @@ struct HomeView: View {
                 } else {
                     // Disabled state for past/future days
                     VStack(spacing: 8) {
-                        Text("오늘만 루틴을 시작할 수 있습니다")
+                        Text(L("home.only.today"))
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .multilineTextAlignment(.center)
@@ -120,7 +120,7 @@ struct HomeView: View {
                     }
 
                     VStack(spacing: 12) {
-                        Text("아직 루틴이 없습니다")
+                        Text(L("home.no.routines"))
                             .font(.title2)
                             .fontWeight(.bold)
 
@@ -138,7 +138,7 @@ struct HomeView: View {
                             }
                             .font(.body)
 
-                            Text("새로운 루틴을 추가해보세요")
+                            Text(L("home.add.first.routine"))
                                 .font(.body)
                                 .foregroundColor(.gray)
                         }
@@ -168,7 +168,7 @@ struct HomeView: View {
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "square.and.pencil")
-                            Text("루틴 편집하기")
+                            Text(L("home.edit.routine"))
                                 .fontWeight(.semibold)
                         }
                         .font(.headline)
@@ -306,13 +306,13 @@ struct HomeView: View {
             print("⚠️ No incomplete time type found - hasRoutines: \(hasRoutines), allCompleted: \(allCompleted)")
 
             if !hasRoutines {
-                timeRestrictionMessage = "루틴이 없습니다. 먼저 루틴을 추가해주세요."
+                timeRestrictionMessage = L("home.no.routines.add")
                 showTimeRestrictionAlert = true
                 return
             }
 
             if allCompleted {
-                timeRestrictionMessage = "오늘의 모든 루틴을 이미 완료했습니다! 🎉"
+                timeRestrictionMessage = L("home.all.complete.today")
                 showTimeRestrictionAlert = true
                 return
             }
@@ -347,9 +347,9 @@ struct HomeView: View {
                     let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
 
                     timeRestrictionMessage = """
-                    현재 \(currentTimeType.rawValue) 시간대의 루틴은 모두 완료했습니다! 🎉
+                    \(String(format: L("home.timetype.complete"), currentTimeType.displayName))
 
-                    다른 시간대의 미완료 루틴이 있습니다.
+                    \(L("home.other.incomplete"))
                     해당 시간대에 실행해주세요.
 
                     실행 가능한 시간:
@@ -359,7 +359,7 @@ struct HomeView: View {
                     """
                 } else {
                     // Current time type routines are completed
-                    timeRestrictionMessage = "현재 \(currentTimeType.rawValue) 시간대의 루틴은 모두 완료했습니다! 🎉"
+                    timeRestrictionMessage = String(format: L("home.timetype.complete"), currentTimeType.displayName)
                 }
             } else {
                 // Not in any time slot
@@ -368,7 +368,7 @@ struct HomeView: View {
                 let eveningRange = TimeSlotManager.shared.getTimeRangeString(for: .evening)
 
                 timeRestrictionMessage = """
-                현재는 루틴 실행 시간이 아닙니다.
+                \(L("home.not.execution.time"))
 
                 실행 가능한 시간:
                 🌅 아침: \(morningRange)
@@ -543,7 +543,7 @@ struct TimeRoutineBoxView: View {
                         .font(.title2)
                         .foregroundColor(timeTypeColor)
 
-                    Text(timeType.rawValue)
+                    Text(timeType.displayName)
                         .font(.title3)
                         .fontWeight(.bold)
 

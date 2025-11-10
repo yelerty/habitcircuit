@@ -1,0 +1,150 @@
+/* General */
+"done" = "Done";
+"cancel" = "Cancel";
+"delete" = "Delete";
+"save" = "Save";
+"edit" = "Edit";
+"ok" = "OK";
+"close" = "Close";
+"settings" = "Settings";
+
+/* Days of Week */
+"day.monday" = "Monday";
+"day.tuesday" = "Tuesday";
+"day.wednesday" = "Wednesday";
+"day.thursday" = "Thursday";
+"day.friday" = "Friday";
+"day.saturday" = "Saturday";
+"day.sunday" = "Sunday";
+"day.monday.short" = "Mon";
+"day.tuesday.short" = "Tue";
+"day.wednesday.short" = "Wed";
+"day.thursday.short" = "Thu";
+"day.friday.short" = "Fri";
+"day.saturday.short" = "Sat";
+"day.sunday.short" = "Sun";
+
+/* Time Types */
+"time.morning" = "Morning";
+"time.afternoon" = "Afternoon";
+"time.evening" = "Evening";
+
+/* Categories */
+"category.health" = "Health";
+"category.study" = "Study";
+"category.work" = "Work";
+"category.household" = "Household";
+"category.selfcare" = "Self-Care";
+"category.hobby" = "Hobby";
+"category.social" = "Social";
+"category.other" = "Other";
+
+/* Category Descriptions */
+"category.health.desc" = "Exercise, meals, sleep, etc.";
+"category.study.desc" = "Reading, courses, learning, etc.";
+"category.work.desc" = "Tasks, projects, meetings, etc.";
+"category.household.desc" = "Cleaning, cooking, laundry, etc.";
+"category.selfcare.desc" = "Meditation, journaling, care, etc.";
+"category.hobby.desc" = "Art, music, hobbies, etc.";
+"category.social.desc" = "Gatherings, friends, family, etc.";
+"category.other.desc" = "Uncategorized routines";
+
+/* Settings View */
+"settings.title" = "Settings";
+"settings.notifications" = "Notifications";
+"settings.notifications.footer" = "Receive routine reminders at your scheduled times";
+"settings.statistics" = "Statistics";
+"settings.current.streak" = "Current Streak";
+"settings.longest.streak" = "Longest Streak";
+"settings.total.completion" = "Total Completions";
+"settings.data.management" = "Data Management";
+"settings.data.management.footer" = "Save up to 5 routine sets within the app, or export and import as JSON files.\nAdd example routines to quickly create your routines.\nShare on the web to exchange routines with others.\n\n💡 Routines downloaded from the web can be easily found when importing if saved to the 'HabitCircuit' folder in the Files app.";
+"settings.saved.routines" = "Saved Routines";
+"settings.example.routines" = "Example Routines";
+"settings.export.routines" = "Export Routines";
+"settings.import.routines" = "Import Routines";
+"settings.web.sharing" = "Share on Web";
+"settings.time.slots" = "Routine Time Slots";
+"settings.time.slots.footer" = "Each routine can be executed from 1 hour before to 3 hours after the notification time.\nChanging the notification time automatically adjusts the available time slots.";
+"settings.app.info" = "App Info";
+"settings.time.guide" = "Routine Time Guide";
+"settings.version" = "Version";
+"settings.language" = "Language";
+"settings.language.selection" = "Language Selection";
+
+/* Home View */
+"home.title" = "Habit Circuit";
+"home.add.routine" = "Add Routine";
+"home.edit.routine" = "Edit Routines";
+"home.no.routines" = "No routines yet";
+"home.add.first.routine" = "Add new routines";
+"home.streak" = "Streak";
+"home.days" = " days";
+"home.start.routine" = "Start Routine";
+"home.restart" = "Restart";
+"home.not.routine.time" = "Not routine execution time";
+"home.only.today" = "You can only start today's routines";
+"home.no.routines.add" = "No routines. Please add routines first.";
+"home.all.complete.today" = "All routines for today are completed! 🎉";
+"home.timetype.complete" = "All %@ routines are completed! 🎉";
+"home.other.incomplete" = "There are incomplete routines in other time slots.";
+"home.not.execution.time" = "Not routine execution time.";
+
+/* Routine Edit View */
+"routine.edit.title" = "Edit Routine";
+"routine.name.placeholder" = "Enter routine name";
+"routine.select.category" = "Select Category";
+"routine.add" = "Add Routine";
+"routine.delete" = "Delete Routine";
+"routine.delete.confirm" = "Are you sure you want to delete this routine?";
+"routine.new.add" = "Add new routine";
+"routine.order.info" = "Routines will run in the order added";
+"routine.example.view" = "View Examples";
+"routine.add.please" = "Please add routines";
+"routine.add.info" = "You can add routines in the field above\nand change their order by dragging";
+"routine.name" = "Routine Name";
+"routine.delete.warning" = "Are you sure you want to delete this routine?\nDeleted routines cannot be recovered.";
+"routine.my.add" = "Add my routine";
+"routine.count" = "%@";
+
+/* Toast Messages */
+"toast.routine.added" = "Routine added";
+"toast.routine.deleted" = "Routine deleted";
+"toast.routine.updated" = "Routine updated";
+"toast.routine.completed" = "Routine completed!";
+"toast.routine.uncompleted" = "Completion cancelled";
+
+/* Alerts */
+"alert.title" = "Alert";
+"alert.export.error" = "An error occurred while exporting routines.";
+"alert.file.save.error" = "An error occurred while saving the file";
+"alert.import.success" = "Deleted existing routines and imported new ones!";
+"alert.import.error" = "Failed to import routines. Please check the file format.";
+"alert.file.read.error" = "An error occurred while reading the file";
+"alert.file.select.error" = "An error occurred while selecting the file";
+
+/* Saved Routines */
+"saved.routines.title" = "Saved Routines";
+"saved.routines.empty" = "No saved routines";
+"saved.routines.save.current" = "Save Current Routines";
+"saved.routines.load" = "Load";
+"saved.routines.delete.all" = "Delete All Current Routines";
+"saved.routines.max.reached" = "You can save up to 5 routine sets";
+"saved.routines.delete.confirm" = "Are you sure you want to delete all current routines?";
+
+/* Default Routines */
+"default.routines.title" = "Example Routines";
+"default.routines.add" = "Add Example Routine";
+"default.routines.morning" = "Morning Routine";
+"default.routines.evening" = "Evening Routine";
+"default.routines.study" = "Study Routine";
+"default.routines.exercise" = "Exercise Routine";
+
+/* Time Guide */
+"time.guide.title" = "Routine Time Guide";
+"time.guide.description" = "Each routine has an available time range based on the set notification time.";
+"time.guide.range" = "Available time: 1 hour before ~ 3 hours after notification time";
+
+/* Web Sharing */
+"web.share.title" = "Share on Web";
+"web.share.description" = "Share your routines on the web and exchange with others.";

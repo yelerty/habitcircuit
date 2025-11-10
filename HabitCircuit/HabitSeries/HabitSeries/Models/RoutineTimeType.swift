@@ -1,9 +1,13 @@
 import Foundation
 
 enum RoutineTimeType: String, CaseIterable, Codable {
-    case morning = "아침"
-    case afternoon = "점심"
-    case evening = "저녁"
+    case morning = "morning"
+    case afternoon = "afternoon"
+    case evening = "evening"
+
+    var displayName: String {
+        return L("time.\(self.rawValue)")
+    }
 
     var icon: String {
         switch self {

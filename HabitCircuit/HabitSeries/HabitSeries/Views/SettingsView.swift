@@ -7,6 +7,7 @@ struct SettingsView: View {
     @StateObject private var streakManager = StreakManager.shared
     @StateObject private var viewModel = RoutineViewModel(context: PersistenceController.shared.container.viewContext)
     @StateObject private var timeSlotManager = TimeSlotManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     @State private var showExportSheet = false
     @State private var showImportSheet = false
@@ -16,6 +17,7 @@ struct SettingsView: View {
     @State private var showSavedRoutines = false
     @State private var showTimeGuide = false
     @State private var showDefaultRoutinesManagement = false
+    @State private var showLanguageSelection = false
 
     var body: some View {
         NavigationView {
@@ -40,41 +42,41 @@ struct SettingsView: View {
                         isEnabled: $notificationManager.eveningEnabled
                     )
                 } header: {
-                    Label("알림 설정", systemImage: "bell.fill")
+                    Label(L("settings.notifications"), systemImage: "bell.fill")
                 } footer: {
-                    Text("설정한 시간에 루틴 알림을 받을 수 있습니다")
+                    Text(L("settings.notifications.footer"))
                 }
 
                 // Streak Statistics Section
                 Section {
                     HStack {
-                        Label("현재 연속", systemImage: "flame.fill")
+                        Label(L("settings.current.streak"), systemImage: "flame.fill")
                             .foregroundColor(.orange)
                         Spacer()
-                        Text("\(streakManager.currentStreak)일")
+                        Text("\(streakManager.currentStreak)\(L("home.days"))")
                             .font(.headline)
                             .foregroundColor(.orange)
                     }
 
                     HStack {
-                        Label("최장 기록", systemImage: "trophy.fill")
+                        Label(L("settings.longest.streak"), systemImage: "trophy.fill")
                             .foregroundColor(.yellow)
                         Spacer()
-                        Text("\(streakManager.longestStreak)일")
+                        Text("\(streakManager.longestStreak)\(L("home.days"))")
                             .font(.headline)
                             .foregroundColor(.yellow)
                     }
 
                     HStack {
-                        Label("총 완료 일수", systemImage: "calendar.badge.checkmark")
+                        Label(L("settings.total.completion"), systemImage: "calendar.badge.checkmark")
                             .foregroundColor(.green)
                         Spacer()
-                        Text("\(streakManager.completionDates.count)일")
+                        Text("\(streakManager.completionDates.count)\(L("home.days"))")
                             .font(.headline)
                             .foregroundColor(.green)
                     }
                 } header: {
-                    Label("통계", systemImage: "chart.bar.fill")
+                    Label(L("settings.statistics"), systemImage: "chart.bar.fill")
                 }
 
                 // Data Management Section
@@ -83,7 +85,7 @@ struct SettingsView: View {
                         showSavedRoutines = true
                     }) {
                         HStack {
-                            Label("저장된 루틴 관리", systemImage: "folder.badge.gearshape")
+                            Label(L("settings.saved.routines"), systemImage: "folder.badge.gearshape")
                                 .foregroundColor(.orange)
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -96,7 +98,7 @@ struct SettingsView: View {
                         showDefaultRoutinesManagement = true
                     }) {
                         HStack {
-                            Label("예시 루틴 관리", systemImage: "list.bullet.clipboard")
+                            Label(L("settings.example.routines"), systemImage: "list.bullet.clipboard")
                                 .foregroundColor(.cyan)
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -109,7 +111,7 @@ struct SettingsView: View {
                         exportRoutines()
                     }) {
                         HStack {
-                            Label("루틴 내보내기", systemImage: "square.and.arrow.up")
+                            Label(L("settings.export.routines"), systemImage: "square.and.arrow.up")
                                 .foregroundColor(.blue)
                             Spacer()
                         }
@@ -119,7 +121,7 @@ struct SettingsView: View {
                         showImportSheet = true
                     }) {
                         HStack {
-                            Label("루틴 가져오기", systemImage: "square.and.arrow.down")
+                            Label(L("settings.import.routines"), systemImage: "square.and.arrow.down")
                                 .foregroundColor(.green)
                             Spacer()
                         }
@@ -129,7 +131,7 @@ struct SettingsView: View {
                         openWebSharing()
                     }) {
                         HStack {
-                            Label("웹에서 공유하기", systemImage: "globe")
+                            Label(L("settings.web.sharing"), systemImage: "globe")
                                 .foregroundColor(.purple)
                             Spacer()
                             Image(systemName: "arrow.up.forward")
@@ -138,9 +140,9 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Label("데이터 관리", systemImage: "folder.fill")
+                    Label(L("settings.data.management"), systemImage: "folder.fill")
                 } footer: {
-                    Text("루틴을 앱 내에 최대 5개까지 저장하거나, JSON 파일로 내보내고 가져올 수 있습니다.\n예시 루틴을 추가하여 빠르게 루틴을 만들 수 있습니다.\n웹에서 공유하면 다른 사람들과 루틴을 나눌 수 있습니다.\n\n💡 웹에서 다운로드한 루틴은 파일 앱의 'HabitCircuit' 폴더에 저장하면 가져오기 시 쉽게 찾을 수 있습니다.")
+                    Text(L("settings.data.management.footer"))
                 }
 
                 // Time Slot Info Section
@@ -149,7 +151,6 @@ struct SettingsView: View {
                         TimeSlotSummaryRow(
                             icon: "sunrise.fill",
                             color: .orange,
-                            title: "아침",
                             timeType: .morning,
                             timeSlotManager: timeSlotManager
                         )
@@ -157,7 +158,6 @@ struct SettingsView: View {
                         TimeSlotSummaryRow(
                             icon: "sun.max.fill",
                             color: .yellow,
-                            title: "점심",
                             timeType: .afternoon,
                             timeSlotManager: timeSlotManager
                         )
@@ -165,16 +165,35 @@ struct SettingsView: View {
                         TimeSlotSummaryRow(
                             icon: "moon.stars.fill",
                             color: .indigo,
-                            title: "저녁",
                             timeType: .evening,
                             timeSlotManager: timeSlotManager
                         )
                     }
                     .padding(.vertical, 4)
                 } header: {
-                    Label("루틴 시간대", systemImage: "clock.fill")
+                    Label(L("settings.time.slots"), systemImage: "clock.fill")
                 } footer: {
-                    Text("각 루틴은 알림 시간의 1시간 전부터 3시간 후까지 실행할 수 있습니다.\n알림 시간을 변경하면 실행 가능한 시간대가 자동으로 조정됩니다.")
+                    Text(L("settings.time.slots.footer"))
+                }
+
+                // Language Section
+                Section {
+                    Button(action: {
+                        showLanguageSelection = true
+                    }) {
+                        HStack {
+                            Label(L("settings.language"), systemImage: "globe")
+                                .foregroundColor(.purple)
+                            Spacer()
+                            Text("\(localizationManager.currentLanguage.flag) \(localizationManager.currentLanguage.displayName)")
+                                .foregroundColor(.gray)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                } header: {
+                    Label(L("settings.language"), systemImage: "globe")
                 }
 
                 // App Info Section
@@ -183,7 +202,7 @@ struct SettingsView: View {
                         showTimeGuide = true
                     }) {
                         HStack {
-                            Label("루틴 실행 시간 안내", systemImage: "clock.fill")
+                            Label(L("settings.time.guide"), systemImage: "clock.fill")
                                 .foregroundColor(.blue)
                             Spacer()
                             Image(systemName: "chevron.right")
@@ -193,20 +212,20 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Label("버전", systemImage: "info.circle")
+                        Label(L("settings.version"), systemImage: "info.circle")
                         Spacer()
                         Text("1.0.0")
                             .foregroundColor(.gray)
                     }
                 } header: {
-                    Label("앱 정보", systemImage: "app.fill")
+                    Label(L("settings.app.info"), systemImage: "app.fill")
                 }
             }
-            .navigationTitle("설정")
+            .navigationTitle(L("settings.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("완료") {
+                    Button(L("done")) {
                         dismiss()
                     }
                 }
@@ -228,8 +247,11 @@ struct SettingsView: View {
             .sheet(isPresented: $showTimeGuide) {
                 TimeGuideView(isPresented: $showTimeGuide)
             }
-            .alert("알림", isPresented: $showAlert) {
-                Button("확인", role: .cancel) {}
+            .sheet(isPresented: $showLanguageSelection) {
+                LanguageSelectionView(isPresented: $showLanguageSelection)
+            }
+            .alert(L("alert.title"), isPresented: $showAlert) {
+                Button(L("ok"), role: .cancel) {}
             } message: {
                 Text(alertMessage)
             }
@@ -239,7 +261,7 @@ struct SettingsView: View {
     // MARK: - Export Function
     private func exportRoutines() {
         guard let jsonData = viewModel.exportAllRoutines() else {
-            alertMessage = "루틴을 내보내는 중 오류가 발생했습니다."
+            alertMessage = L("alert.export.error")
             showAlert = true
             return
         }
@@ -252,7 +274,7 @@ struct SettingsView: View {
             exportedFileURL = tempURL
             showExportSheet = true
         } catch {
-            alertMessage = "파일 저장 중 오류가 발생했습니다: \(error.localizedDescription)"
+            alertMessage = "\(L("alert.file.save.error")): \(error.localizedDescription)"
             showAlert = true
         }
     }
@@ -265,16 +287,16 @@ struct SettingsView: View {
                 let data = try Data(contentsOf: url)
                 let success = viewModel.importRoutines(from: data, replaceExisting: true)
                 if success {
-                    alertMessage = "기존 루틴을 삭제하고 새로운 루틴을 가져왔습니다!"
+                    alertMessage = L("alert.import.success")
                 } else {
-                    alertMessage = "루틴 가져오기에 실패했습니다. 파일 형식을 확인해주세요."
+                    alertMessage = L("alert.import.error")
                 }
             } catch {
-                alertMessage = "파일 읽기 중 오류가 발생했습니다: \(error.localizedDescription)"
+                alertMessage = "\(L("alert.file.read.error")): \(error.localizedDescription)"
             }
             showAlert = true
         case .failure(let error):
-            alertMessage = "파일 선택 중 오류가 발생했습니다: \(error.localizedDescription)"
+            alertMessage = "\(L("alert.file.select.error")): \(error.localizedDescription)"
             showAlert = true
         }
     }
@@ -299,7 +321,7 @@ struct NotificationTimeRow: View {
                 HStack(spacing: 8) {
                     Image(systemName: timeType.icon)
                         .foregroundColor(timeTypeColor)
-                    Text(timeType.rawValue)
+                    Text(timeType.displayName)
                         .font(.body)
                 }
             }
@@ -311,7 +333,7 @@ struct NotificationTimeRow: View {
             }
 
             if isEnabled {
-                DatePicker("시간", selection: $time, displayedComponents: .hourAndMinute)
+                DatePicker(L("settings.notifications"), selection: $time, displayedComponents: .hourAndMinute)
                     .datePickerStyle(.compact)
                     .labelsHidden()
                     .onChange(of: time) { oldValue, newValue in
@@ -342,7 +364,6 @@ struct NotificationTimeRow: View {
 struct TimeSlotSummaryRow: View {
     let icon: String
     let color: Color
-    let title: String
     let timeType: RoutineTimeType
     @ObservedObject var timeSlotManager: TimeSlotManager
 
@@ -353,9 +374,9 @@ struct TimeSlotSummaryRow: View {
                 .font(.body)
                 .frame(width: 24)
 
-            Text(title)
+            Text(timeType.displayName)
                 .font(.body)
-                .frame(width: 40, alignment: .leading)
+                .frame(width: 60, alignment: .leading)
 
             Text(timeSlotManager.getTimeRangeString(for: timeType))
                 .font(.caption)

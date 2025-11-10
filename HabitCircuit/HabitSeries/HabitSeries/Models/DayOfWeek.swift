@@ -1,24 +1,20 @@
 import Foundation
 
 enum DayOfWeek: String, CaseIterable {
-    case monday = "월요일"
-    case tuesday = "화요일"
-    case wednesday = "수요일"
-    case thursday = "목요일"
-    case friday = "금요일"
-    case saturday = "토요일"
-    case sunday = "일요일"
+    case monday = "monday"
+    case tuesday = "tuesday"
+    case wednesday = "wednesday"
+    case thursday = "thursday"
+    case friday = "friday"
+    case saturday = "saturday"
+    case sunday = "sunday"
+
+    var displayName: String {
+        return L("day.\(self.rawValue)")
+    }
 
     var shortName: String {
-        switch self {
-        case .monday: return "월"
-        case .tuesday: return "화"
-        case .wednesday: return "수"
-        case .thursday: return "목"
-        case .friday: return "금"
-        case .saturday: return "토"
-        case .sunday: return "일"
-        }
+        return L("day.\(self.rawValue).short")
     }
 
     static var today: DayOfWeek {

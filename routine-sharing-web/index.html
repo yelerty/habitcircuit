@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>루틴 공유 커뮤니티 - Habit Circuit</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
     <div class="container">
@@ -28,28 +28,6 @@
         <div id="browse-view" class="view active">
             <!-- Filters -->
             <div class="filters">
-                <div class="filter-group">
-                    <label>요일</label>
-                    <select id="day-filter" class="filter-select">
-                        <option value="">전체</option>
-                        <option value="월요일">월요일</option>
-                        <option value="화요일">화요일</option>
-                        <option value="수요일">수요일</option>
-                        <option value="목요일">목요일</option>
-                        <option value="금요일">금요일</option>
-                        <option value="토요일">토요일</option>
-                        <option value="일요일">일요일</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>시간대</label>
-                    <select id="time-filter" class="filter-select">
-                        <option value="">전체</option>
-                        <option value="아침">🌅 아침</option>
-                        <option value="점심">☀️ 점심</option>
-                        <option value="저녁">🌙 저녁</option>
-                    </select>
-                </div>
                 <div class="filter-group">
                     <label>정렬</label>
                     <select id="sort-filter" class="filter-select">
@@ -139,10 +117,35 @@
                             ></textarea>
                             <small class="form-hint">각 줄에 하나씩 입력하면 순서대로 저장됩니다</small>
                         </div>
-                        <button type="submit" class="btn-primary" id="manual-submit-btn">
-                            공유하기
-                        </button>
+                        <div class="form-group">
+                            <label for="manual-password">비밀번호 (4자리) *</label>
+                            <input
+                                type="password"
+                                id="manual-password"
+                                required
+                                class="form-control"
+                                maxlength="4"
+                                pattern="[0-9]{4}"
+                                placeholder="4자리 숫자"
+                                inputmode="numeric"
+                            />
+                            <small class="form-hint">나중에 수정할 때 필요합니다. 꼭 기억하세요!</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-secondary" id="manual-add-btn">
+                                ➕ 루틴 추가
+                            </button>
+                            <button type="button" class="btn-primary" id="manual-done-btn" disabled>
+                                완료 및 미리보기
+                            </button>
+                        </div>
                     </form>
+
+                    <!-- Added Routines List -->
+                    <div id="added-routines-list" class="added-routines-list hidden">
+                        <h4>추가된 루틴</h4>
+                        <div id="added-routines-content"></div>
+                    </div>
                 </div>
 
                 <!-- Preview before upload -->
@@ -181,7 +184,7 @@
     <div id="toast" class="toast hidden"></div>
 
     <!-- Firebase SDK -->
-    <script type="module" src="firebase.js?v=9"></script>
-    <script type="module" src="app.js?v=9"></script>
+    <script type="module" src="firebase.js?v=23"></script>
+    <script type="module" src="app.js?v=23"></script>
 </body>
 </html>

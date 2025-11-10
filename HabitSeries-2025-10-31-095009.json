@@ -1,0 +1,258 @@
+{
+  "exportDate" : "2025-10-31T00:50:09Z",
+  "routines" : [
+    {
+      "dayOfWeek" : "목요일",
+      "name" : "홍삼먹기",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "수요일",
+      "name" : "비타민 먹기",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "비타민 먹기",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "물 마시기 (500ml)",
+      "order" : 1,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "5분 명상",
+      "order" : 2,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "영어유튜브보기",
+      "order" : 0,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "팔굽혀펴기 30개",
+      "order" : 1,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "주식 점검",
+      "order" : 2,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "내일 할일 정리",
+      "order" : 3,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "듀오링고 하기",
+      "order" : 4,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "물 마시기 (300ml)",
+      "order" : 5,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "감사일기 쓰기",
+      "order" : 6,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "월요일",
+      "name" : "영어유튜브보기",
+      "order" : 0,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "스쿼트 100개",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "비타민 먹기",
+      "order" : 1,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "쓰레기 정리",
+      "order" : 2,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "듀오링고 하기",
+      "order" : 3,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "영어 공부 20분",
+      "order" : 4,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "물 마시기 (500ml)",
+      "order" : 5,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "책 읽기 (30분)",
+      "order" : 6,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "주식 점검",
+      "order" : 7,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "감사 일기",
+      "order" : 8,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "내일 할일 정리",
+      "order" : 0,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "일기 쓰기",
+      "order" : 1,
+      "timeType" : "저녁"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "스쿼트 100개",
+      "order" : 0,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "주식 점검",
+      "order" : 2,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "이메일 정리",
+      "order" : 3,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "물 마시기 (300ml)",
+      "order" : 4,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "영어 공부 10분",
+      "order" : 5,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "운동 20분",
+      "order" : 6,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "일요일",
+      "name" : "화장실청소하기",
+      "order" : 7,
+      "timeType" : "점심"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "약먹기",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "팔굽혀펴기",
+      "order" : 1,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "5분명상",
+      "order" : 2,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "쓰레기정리",
+      "order" : 3,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "주식점검",
+      "order" : 4,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "앱개발",
+      "order" : 5,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "내일할일정리",
+      "order" : 6,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "토요일",
+      "name" : "듀오링고",
+      "order" : 7,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "화요일",
+      "name" : "홍삼먹기",
+      "order" : 0,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "화요일",
+      "name" : "물 마시기 (300ml)",
+      "order" : 1,
+      "timeType" : "아침"
+    },
+    {
+      "dayOfWeek" : "화요일",
+      "name" : "스트레칭",
+      "order" : 2,
+      "timeType" : "아침"
+    }
+  ],
+  "version" : "1.0"
+}
