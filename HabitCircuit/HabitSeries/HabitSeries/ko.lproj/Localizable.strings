@@ -214,3 +214,10 @@
 "home.tap.top.right" = "우측 상단의";
 "home.button.press" = "버튼을 눌러";
 "home.or" = "또는";
+
+/* App Icon Customization */
+"settings.app.icon" = "앱 아이콘";
+"settings.app.icon.custom" = "커스텀 아이콘";
+"settings.app.icon.change" = "아이콘 변경";
+"settings.app.icon.reset" = "기본 아이콘으로 복원";
+"settings.app.icon.select" = "갤러리에서 선택";

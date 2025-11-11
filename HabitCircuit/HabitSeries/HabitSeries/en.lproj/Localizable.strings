@@ -214,3 +214,10 @@
 "home.tap.top.right" = "Tap the top right";
 "home.button.press" = "button to";
 "home.or" = "or";
+
+/* App Icon Customization */
+"settings.app.icon" = "App Icon";
+"settings.app.icon.custom" = "Custom Icon";
+"settings.app.icon.change" = "Change Icon";
+"settings.app.icon.reset" = "Reset to Default";
+"settings.app.icon.select" = "Select from Gallery";

@@ -7,6 +7,7 @@ struct SplashScreenView: View {
     @State private var progress: Double = 0.0
     @State private var loadingComplete = false
     @State private var showTapHint = false
+    @StateObject private var iconManager = AppIconManager.shared
 
     var body: some View {
         ZStack {
@@ -34,9 +35,17 @@ struct SplashScreenView: View {
                         .fill(Color.white.opacity(0.2))
                         .frame(width: 120, height: 120)
 
-                    Image(systemName: "target")
-                        .font(.system(size: 60))
-                        .foregroundColor(.white)
+                    if let iconImage = iconManager.getIcon() {
+                        Image(uiImage: iconImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                    } else {
+                        Image(systemName: "target")
+                            .font(.system(size: 60))
+                            .foregroundColor(.white)
+                    }
                 }
                 .scaleEffect(scale)
                 .opacity(opacity)

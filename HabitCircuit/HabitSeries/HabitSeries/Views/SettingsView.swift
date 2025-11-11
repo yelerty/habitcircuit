@@ -8,6 +8,7 @@ struct SettingsView: View {
     @StateObject private var viewModel = RoutineViewModel(context: PersistenceController.shared.container.viewContext)
     @StateObject private var timeSlotManager = TimeSlotManager.shared
     @StateObject private var localizationManager = LocalizationManager.shared
+    @StateObject private var iconManager = AppIconManager.shared
 
     @State private var showExportSheet = false
     @State private var showImportSheet = false
@@ -18,6 +19,8 @@ struct SettingsView: View {
     @State private var showTimeGuide = false
     @State private var showDefaultRoutinesManagement = false
     @State private var showLanguageSelection = false
+    @State private var showImagePicker = false
+    @State private var selectedImage: UIImage?
 
     var body: some View {
         NavigationView {
@@ -176,6 +179,43 @@ struct SettingsView: View {
                     Text(L("settings.time.slots.footer"))
                 }
 
+                // App Icon Section
+                Section {
+                    HStack {
+                        Label(L("settings.app.icon.custom"), systemImage: "app.badge")
+                        Spacer()
+                        if let iconImage = iconManager.getIcon() {
+                            Image(uiImage: iconImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        } else {
+                            Image(systemName: "target")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
+                    }
+
+                    Button(action: {
+                        showImagePicker = true
+                    }) {
+                        Label(L("settings.app.icon.change"), systemImage: "photo")
+                            .foregroundColor(.blue)
+                    }
+
+                    if iconManager.customIconData != nil {
+                        Button(action: {
+                            iconManager.removeIcon()
+                        }) {
+                            Label(L("settings.app.icon.reset"), systemImage: "arrow.counterclockwise")
+                                .foregroundColor(.red)
+                        }
+                    }
+                } header: {
+                    Label(L("settings.app.icon"), systemImage: "app")
+                }
+
                 // Language Section
                 Section {
                     Button(action: {
@@ -249,6 +289,14 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showLanguageSelection) {
                 LanguageSelectionView(isPresented: $showLanguageSelection)
+            }
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(selectedImage: $selectedImage)
+            }
+            .onChange(of: selectedImage) { oldValue, newValue in
+                if let image = newValue, let imageData = image.jpegData(compressionQuality: 0.8) {
+                    iconManager.saveIcon(imageData)
+                }
             }
             .alert(L("alert.title"), isPresented: $showAlert) {
                 Button(L("ok"), role: .cancel) {}
