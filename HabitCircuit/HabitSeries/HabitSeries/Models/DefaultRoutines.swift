@@ -4,31 +4,33 @@ import Combine
 class DefaultRoutines: ObservableObject {
     private static let userDefaultsKey = "customDefaultRoutines"
 
-    static let builtInExamples: [String] = [
-        "비타민 먹기",
-        "팔굽혀펴기 30개",
-        "스쿼트 100개",
-        "5분 명상",
-        "쓰레기 정리",
-        "주식 점검",
-        "내일 할일 정리",
-        "듀오링고 하기",
-        "책 읽기 (30분)",
-        "이메일 정리",
-        "물 마시기 (300ml)",
-        "스트레칭",
-        "감사일기 쓰기",
-        "영어 공부 10분",
-        "운동 20분",
-        "아침 산책",
-        "침대 정리",
-        "설거지",
-        "부모님께전화하기",
-        "성경읽기",
-        "경전읽기",
-        "방청소하기",
-        "화장실청소하기"
-    ]
+    static var builtInExamples: [String] {
+        return [
+            L("example.routine.1"),
+            L("example.routine.2"),
+            L("example.routine.3"),
+            L("example.routine.4"),
+            L("example.routine.5"),
+            L("example.routine.6"),
+            L("example.routine.7"),
+            L("example.routine.8"),
+            L("example.routine.9"),
+            L("example.routine.10"),
+            L("example.routine.11"),
+            L("example.routine.12"),
+            L("example.routine.13"),
+            L("example.routine.14"),
+            L("example.routine.15"),
+            L("example.routine.16"),
+            L("example.routine.17"),
+            L("example.routine.18"),
+            L("example.routine.19"),
+            L("example.routine.20"),
+            L("example.routine.21"),
+            L("example.routine.22"),
+            L("example.routine.23")
+        ]
+    }
 
     @Published var customRoutines: [String] = []
 

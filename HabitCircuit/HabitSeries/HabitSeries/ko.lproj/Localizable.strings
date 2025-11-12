@@ -221,3 +221,28 @@
 "settings.app.icon.change" = "아이콘 변경";
 "settings.app.icon.reset" = "기본 아이콘으로 복원";
 "settings.app.icon.select" = "갤러리에서 선택";
+
+/* Built-in Example Routines */
+"example.routine.1" = "비타민 먹기";
+"example.routine.2" = "팔굽혀펴기 30개";
+"example.routine.3" = "스쿼트 100개";
+"example.routine.4" = "5분 명상";
+"example.routine.5" = "쓰레기 정리";
+"example.routine.6" = "주식 점검";
+"example.routine.7" = "내일 할일 정리";
+"example.routine.8" = "듀오링고 하기";
+"example.routine.9" = "책 읽기 (30분)";
+"example.routine.10" = "이메일 정리";
+"example.routine.11" = "물 마시기 (300ml)";
+"example.routine.12" = "스트레칭";
+"example.routine.13" = "감사일기 쓰기";
+"example.routine.14" = "영어 공부 10분";
+"example.routine.15" = "운동 20분";
+"example.routine.16" = "아침 산책";
+"example.routine.17" = "침대 정리";
+"example.routine.18" = "설거지";
+"example.routine.19" = "부모님께 전화하기";
+"example.routine.20" = "성경 읽기";
+"example.routine.21" = "경전 읽기";
+"example.routine.22" = "방 청소하기";
+"example.routine.23" = "화장실 청소하기";

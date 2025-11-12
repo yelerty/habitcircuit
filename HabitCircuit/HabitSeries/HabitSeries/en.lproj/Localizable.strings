@@ -221,3 +221,28 @@
 "settings.app.icon.change" = "Change Icon";
 "settings.app.icon.reset" = "Reset to Default";
 "settings.app.icon.select" = "Select from Gallery";
+
+/* Built-in Example Routines */
+"example.routine.1" = "Take vitamins";
+"example.routine.2" = "30 push-ups";
+"example.routine.3" = "100 squats";
+"example.routine.4" = "5-minute meditation";
+"example.routine.5" = "Clean up trash";
+"example.routine.6" = "Check stocks";
+"example.routine.7" = "Plan tomorrow's tasks";
+"example.routine.8" = "Practice Duolingo";
+"example.routine.9" = "Read book (30 min)";
+"example.routine.10" = "Organize emails";
+"example.routine.11" = "Drink water (300ml)";
+"example.routine.12" = "Stretching";
+"example.routine.13" = "Write gratitude journal";
+"example.routine.14" = "Study English 10 min";
+"example.routine.15" = "Exercise 20 min";
+"example.routine.16" = "Morning walk";
+"example.routine.17" = "Make bed";
+"example.routine.18" = "Wash dishes";
+"example.routine.19" = "Call parents";
+"example.routine.20" = "Read Bible";
+"example.routine.21" = "Read scriptures";
+"example.routine.22" = "Clean room";
+"example.routine.23" = "Clean bathroom";
