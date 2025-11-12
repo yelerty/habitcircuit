@@ -1,0 +1,7 @@
+/*
+  InfoPlist.strings (Korean)
+  HabitSeries
+*/
+
+/* App Tracking Transparency Permission */
+"NSUserTrackingUsageDescription" = "이 앱은 맞춤형 광고를 제공하고 사용자 경험을 개선하기 위해 데이터를 사용합니다.";
