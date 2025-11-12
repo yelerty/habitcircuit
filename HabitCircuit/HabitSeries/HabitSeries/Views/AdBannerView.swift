@@ -5,11 +5,11 @@ struct AdBannerView: UIViewRepresentable {
     func makeUIView(context: Context) -> BannerView {
         let banner = BannerView(adSize: AdSizeBanner)
 
-        // Test Ad Unit ID - Replace with your actual Ad Unit ID in production
+        // Ad Unit ID - Test for DEBUG, Production for RELEASE
         #if DEBUG
         banner.adUnitID = "ca-app-pub-3940256099942544/2934735716" // Test Banner Ad Unit ID
         #else
-        banner.adUnitID = "YOUR_PRODUCTION_AD_UNIT_ID" // Replace with your actual Ad Unit ID
+        banner.adUnitID = "ca-app-pub-5836154231142926/3107940294" // Production Banner Ad Unit ID
         #endif
 
         // Get the root view controller
