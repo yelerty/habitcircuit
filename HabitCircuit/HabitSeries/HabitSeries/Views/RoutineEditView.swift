@@ -445,7 +445,7 @@ struct DefaultRoutinesSheet: View {
                         .pressEffect()
                     }
 
-                    Text("자주 사용하는 루틴을 추가하여 관리하세요")
+                    Text(L("routine.examples.manage.info"))
                         .font(.caption)
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -457,7 +457,7 @@ struct DefaultRoutinesSheet: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
-                        Text("원하는 루틴을 탭하여 추가하세요")
+                        Text(L("routine.examples.tap.to.add"))
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .padding(.top)
@@ -469,7 +469,7 @@ struct DefaultRoutinesSheet: View {
                                     Image(systemName: "star.fill")
                                         .foregroundColor(.green)
                                         .font(.caption)
-                                    Text("나만의 루틴")
+                                    Text(L("routine.examples.my.routines"))
                                         .font(.headline)
                                         .foregroundColor(.green)
                                 }
@@ -558,7 +558,7 @@ struct DefaultRoutinesSheet: View {
                                 Image(systemName: "lightbulb.fill")
                                     .foregroundColor(.blue)
                                     .font(.caption)
-                                Text("기본 예시")
+                                Text(L("routine.examples.built.in"))
                                     .font(.headline)
                                     .foregroundColor(.blue)
                             }
@@ -626,11 +626,11 @@ struct DefaultRoutinesSheet: View {
                     .padding(.bottom)
                 }
             }
-            .navigationTitle("루틴 예시")
+            .navigationTitle(L("routine.examples.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("닫기") {
+                    Button(L("routine.examples.close")) {
                         let generator = UIImpactFeedbackGenerator(style: .medium)
                         generator.impactOccurred()
                         dismiss()

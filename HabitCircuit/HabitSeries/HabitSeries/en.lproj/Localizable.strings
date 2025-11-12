@@ -222,6 +222,14 @@
 "settings.app.icon.reset" = "Reset to Default";
 "settings.app.icon.select" = "Select from Gallery";
 
+/* Default Routines Sheet */
+"routine.examples.title" = "Routine Examples";
+"routine.examples.close" = "Close";
+"routine.examples.manage.info" = "Add and manage frequently used routines";
+"routine.examples.tap.to.add" = "Tap a routine to add it";
+"routine.examples.my.routines" = "My Routines";
+"routine.examples.built.in" = "Built-in Examples";
+
 /* Built-in Example Routines */
 "example.routine.1" = "Take vitamins";
 "example.routine.2" = "30 push-ups";

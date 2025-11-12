@@ -222,6 +222,14 @@
 "settings.app.icon.reset" = "기본 아이콘으로 복원";
 "settings.app.icon.select" = "갤러리에서 선택";
 
+/* Default Routines Sheet */
+"routine.examples.title" = "루틴 예시";
+"routine.examples.close" = "닫기";
+"routine.examples.manage.info" = "자주 사용하는 루틴을 추가하여 관리하세요";
+"routine.examples.tap.to.add" = "원하는 루틴을 탭하여 추가하세요";
+"routine.examples.my.routines" = "나만의 루틴";
+"routine.examples.built.in" = "기본 예시";
+
 /* Built-in Example Routines */
 "example.routine.1" = "비타민 먹기";
 "example.routine.2" = "팔굽혀펴기 30개";
