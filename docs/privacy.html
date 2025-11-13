@@ -147,6 +147,28 @@
             text-decoration: underline;
         }
 
+        .lang-switch {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .lang-switch a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: #f0f0f0;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .lang-switch a:hover, .lang-switch a.active {
+            background: #667eea;
+            color: white;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -168,6 +190,11 @@
 </head>
 <body>
     <div class="container">
+        <div class="lang-switch">
+            <a href="privacy.html" class="active">🇰🇷 한국어</a>
+            <a href="privacy-en.html">🇺🇸 English</a>
+        </div>
+
         <a href="index.html" class="back-link">← 홈으로 돌아가기</a>
 
         <header>
