@@ -362,40 +362,66 @@ struct NotificationTimeRow: View {
     @Binding var time: Date
     @Binding var isEnabled: Bool
     @StateObject private var notificationManager = NotificationManager.shared
+    @State private var showTimePicker = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle(isOn: $isEnabled) {
-                HStack(spacing: 8) {
-                    Image(systemName: timeType.icon)
-                        .foregroundColor(timeTypeColor)
-                    Text(timeType.displayName)
-                        .font(.body)
+        Toggle(isOn: $isEnabled) {
+            HStack(spacing: 8) {
+                Image(systemName: timeType.icon)
+                    .foregroundColor(timeTypeColor)
+                Text(timeType.displayName)
+                    .font(.body)
 
-                    Spacer()
+                Spacer()
 
-                    if isEnabled {
-                        Text(formattedTime)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                if isEnabled {
+                    Button(action: {
+                        showTimePicker = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Text(formattedTime)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Image(systemName: "clock")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .onChange(of: isEnabled) { oldValue, newValue in
-                notificationManager.saveSettings()
-                if newValue {
-                    requestNotificationPermission()
-                }
+        }
+        .onChange(of: isEnabled) { oldValue, newValue in
+            notificationManager.saveSettings()
+            if newValue {
+                requestNotificationPermission()
             }
-
-            if isEnabled {
-                DatePicker(L("settings.notifications"), selection: $time, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.compact)
+        }
+        .sheet(isPresented: $showTimePicker) {
+            NavigationView {
+                VStack {
+                    DatePicker(
+                        L("settings.notifications"),
+                        selection: $time,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .datePickerStyle(.wheel)
                     .labelsHidden()
                     .onChange(of: time) { oldValue, newValue in
                         notificationManager.saveSettings()
                     }
+                }
+                .navigationTitle(timeType.displayName)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(L("done")) {
+                            showTimePicker = false
+                        }
+                    }
+                }
             }
+            .presentationDetents([.height(300)])
         }
     }
 
