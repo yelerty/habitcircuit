@@ -371,6 +371,14 @@ struct NotificationTimeRow: View {
                         .foregroundColor(timeTypeColor)
                     Text(timeType.displayName)
                         .font(.body)
+
+                    Spacer()
+
+                    if isEnabled {
+                        Text(formattedTime)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             .onChange(of: isEnabled) { oldValue, newValue in
@@ -389,6 +397,14 @@ struct NotificationTimeRow: View {
                     }
             }
         }
+    }
+
+    private var formattedTime: String {
+        let formatter = DateFormatter()
+        let currentLanguage = LocalizationManager.shared.currentLanguage
+        formatter.locale = Locale(identifier: currentLanguage == .korean ? "ko_KR" : "en_US")
+        formatter.timeStyle = .short
+        return formatter.string(from: time)
     }
 
     private var timeTypeColor: Color {
