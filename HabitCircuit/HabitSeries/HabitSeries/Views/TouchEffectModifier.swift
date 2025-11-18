@@ -111,27 +111,32 @@ struct SparkleEffect: View {
         let centerX: CGFloat = 50
         let centerY: CGFloat = 50
 
-        for _ in 0..<12 {
+        // Reduced to 12 sparkles for better performance
+        for i in 0..<12 {
             let angle = Double.random(in: 0...(2 * .pi))
-            let distance: CGFloat = 30
+            let distance: CGFloat = CGFloat.random(in: 30...55)
 
             let particle = ParticleData(
                 position: CGPoint(x: centerX, y: centerY)
             )
             particles.append(particle)
 
-            withAnimation(.easeOut(duration: 0.6)) {
-                if let index = particles.firstIndex(where: { $0.id == particle.id }) {
-                    particles[index].offset = CGSize(
-                        width: cos(angle) * distance,
-                        height: sin(angle) * distance
-                    )
-                    particles[index].opacity = 0
-                    particles[index].scale = 0.5
+            // Stagger the animation
+            let delay = Double(i) * 0.02
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(.easeOut(duration: 0.8)) {
+                    if let index = self.particles.firstIndex(where: { $0.id == particle.id }) {
+                        self.particles[index].offset = CGSize(
+                            width: cos(angle) * distance,
+                            height: sin(angle) * distance
+                        )
+                        self.particles[index].opacity = 0
+                        self.particles[index].scale = 0.3
+                    }
                 }
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 particles.removeAll { $0.id == particle.id }
             }
         }
@@ -146,8 +151,8 @@ struct GlowEffect: ViewModifier {
     func body(content: Content) -> some View {
         content
             .shadow(color: color.opacity(0.6), radius: radius, x: 0, y: 0)
-            .shadow(color: color.opacity(0.4), radius: radius * 1.5, x: 0, y: 0)
-            .shadow(color: color.opacity(0.2), radius: radius * 2, x: 0, y: 0)
+            .shadow(color: color.opacity(0.3), radius: radius * 1.5, x: 0, y: 0)
+            // Removed third shadow for better performance
     }
 }
 
@@ -209,13 +214,20 @@ struct ConfettiBurst: View {
     }
 
     private func createConfetti() {
-        let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink]
+        let colors: [Color] = [
+            DesignSystem.Colors.morningPrimary,
+            DesignSystem.Colors.morningSecondary,
+            DesignSystem.Colors.afternoonPrimary,
+            DesignSystem.Colors.eveningPrimary,
+            .yellow, .green, .pink
+        ]
         let centerX: CGFloat = 50
         let centerY: CGFloat = 50
 
+        // Reduced to 20 confetti pieces for better performance
         for _ in 0..<20 {
             let angle = Double.random(in: 0...(2 * .pi))
-            let distance: CGFloat = CGFloat.random(in: 40...80)
+            let distance: CGFloat = CGFloat.random(in: 60...120)
             let color = colors.randomElement() ?? .blue
 
             let piece = ConfettiPiece(
@@ -224,18 +236,22 @@ struct ConfettiBurst: View {
             )
             confetti.append(piece)
 
-            withAnimation(.easeOut(duration: 0.8)) {
-                if let index = confetti.firstIndex(where: { $0.id == piece.id }) {
-                    confetti[index].offset = CGSize(
-                        width: cos(angle) * distance,
-                        height: sin(angle) * distance + 20 // Add gravity
-                    )
-                    confetti[index].rotation = Double.random(in: 0...360)
-                    confetti[index].opacity = 0
+            // Staggered animation for more dynamic effect
+            let delay = Double.random(in: 0...0.2)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    if let index = self.confetti.firstIndex(where: { $0.id == piece.id }) {
+                        self.confetti[index].offset = CGSize(
+                            width: cos(angle) * distance,
+                            height: sin(angle) * distance + 30 // Enhanced gravity
+                        )
+                        self.confetti[index].rotation = Double.random(in: 0...720) // More rotation
+                        self.confetti[index].opacity = 0
+                    }
                 }
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                 confetti.removeAll { $0.id == piece.id }
             }
         }

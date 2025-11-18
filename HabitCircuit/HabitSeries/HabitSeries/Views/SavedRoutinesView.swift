@@ -141,13 +141,13 @@ struct SavedRoutinesView: View {
             } message: {
                 Text(alertMessage)
             }
-            .alert("모든 루틴 삭제", isPresented: $showDeleteAllConfirm) {
+            .alert("현재 루틴 모두 삭제", isPresented: $showDeleteAllConfirm) {
                 Button("삭제", role: .destructive) {
                     deleteAllRoutines()
                 }
                 Button("취소", role: .cancel) {}
             } message: {
-                Text("⚠️ 현재 모든 요일의 모든 루틴이 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.\n진행하시겠습니까?")
+                Text("⚠️ 현재 사용 중인 모든 루틴이 삭제됩니다.\n(저장된 슬롯 1~5번은 삭제되지 않습니다)\n\n이 작업은 되돌릴 수 없습니다.\n진행하시겠습니까?")
             }
         }
     }
@@ -241,13 +241,20 @@ struct SavedRoutinesView: View {
     }
 
     private func deleteAllRoutines() {
+        // ONLY delete Routine entities, NOT SavedRoutineSlot
         let fetchRequest: NSFetchRequest<Routine> = Routine.fetchRequest()
 
         do {
             let context = PersistenceController.shared.container.viewContext
 
+            // Log saved slots BEFORE deletion
+            let slotRequest = NSFetchRequest<SavedRoutineSlot>(entityName: "SavedRoutineSlot")
+            let slotsBefore = try context.fetch(slotRequest)
+            print("📊 Saved slots BEFORE deletion: \(slotsBefore.count)")
+
             // Fetch all existing routines
             let existingRoutines = try context.fetch(fetchRequest)
+            print("🗑️ About to delete \(existingRoutines.count) Routine entities")
 
             // Delete each routine individually
             for routine in existingRoutines {
@@ -257,16 +264,27 @@ struct SavedRoutinesView: View {
             // Save the deletion
             try context.save()
 
-            print("✅ Successfully deleted \(existingRoutines.count) routines")
+            // Verify saved slots are still there AFTER deletion
+            let slotsAfter = try context.fetch(slotRequest)
+            print("✅ Saved slots AFTER deletion: \(slotsAfter.count)")
+
+            if slotsBefore.count != slotsAfter.count {
+                print("⚠️ WARNING: Saved slots were affected! Before: \(slotsBefore.count), After: \(slotsAfter.count)")
+            }
+
+            print("✅ Successfully deleted \(existingRoutines.count) Routine entities")
 
             // Reload data in viewModel
             viewModel.loadRoutines()
             viewModel.loadAllRoutines()
 
+            // Reload saved slots to verify
+            savedRoutineManager.loadSavedSlots()
+
             alertMessage = "모든 루틴이 삭제되었습니다 (\(existingRoutines.count)개)"
             showAlert = true
         } catch {
-            print("Failed to delete all routines: \(error)")
+            print("❌ Failed to delete all routines: \(error)")
             alertMessage = "루틴 삭제 중 오류가 발생했습니다: \(error.localizedDescription)"
             showAlert = true
         }

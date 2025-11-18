@@ -346,7 +346,7 @@ struct RoutineEditView: View {
         print("🎯 RoutineEditView - deleteRoutine called with offsets: \(offsets)")
         print("🎯 Before delete - viewModel.routines.count: \(viewModel.routines.count)")
 
-        let routineNames = offsets.map { viewModel.routines[$0].name }.joined(separator: ", ")
+        _ = offsets.map { viewModel.routines[$0].name }.joined(separator: ", ")
 
         viewModel.deleteRoutine(at: offsets)
         print("🎯 After delete - viewModel.routines.count: \(viewModel.routines.count)")

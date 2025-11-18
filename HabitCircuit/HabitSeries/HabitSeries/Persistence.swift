@@ -2,6 +2,10 @@ import CoreData
 
 struct PersistenceController {
     static let shared = PersistenceController()
+    static let preview: PersistenceController = {
+        let controller = PersistenceController(inMemory: true)
+        return controller
+    }()
 
     let container: NSPersistentContainer
 
