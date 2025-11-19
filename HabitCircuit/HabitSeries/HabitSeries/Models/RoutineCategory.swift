@@ -3,6 +3,7 @@ import SwiftUI
 
 enum RoutineCategory: String, CaseIterable, Codable {
     case health = "health"
+    case exercise = "exercise"
     case study = "study"
     case work = "work"
     case household = "household"
@@ -18,6 +19,7 @@ enum RoutineCategory: String, CaseIterable, Codable {
     var icon: String {
         switch self {
         case .health: return "heart.fill"
+        case .exercise: return "figure.run"
         case .study: return "book.fill"
         case .work: return "briefcase.fill"
         case .household: return "house.fill"
@@ -31,6 +33,7 @@ enum RoutineCategory: String, CaseIterable, Codable {
     var color: Color {
         switch self {
         case .health: return .red
+        case .exercise: return Color(red: 0.0, green: 0.7, blue: 0.3)  // 밝은 초록색
         case .study: return .blue
         case .work: return .purple
         case .household: return .orange

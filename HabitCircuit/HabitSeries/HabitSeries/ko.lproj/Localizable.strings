@@ -31,6 +31,7 @@
 
 /* Categories */
 "category.health" = "건강";
+"category.exercise" = "운동";
 "category.study" = "학습";
 "category.work" = "업무";
 "category.household" = "청소/가사";
@@ -40,7 +41,8 @@
 "category.other" = "기타";
 
 /* Category Descriptions */
-"category.health.desc" = "운동, 식사, 수면 등";
+"category.health.desc" = "비타민, 식사, 수면 등";
+"category.exercise.desc" = "운동, 스트레칭, 산책 등";
 "category.study.desc" = "독서, 강의, 학습 등";
 "category.work.desc" = "업무, 프로젝트, 회의 등";
 "category.household.desc" = "청소, 요리, 세탁 등";

@@ -305,8 +305,8 @@ struct RoutineEditView: View {
                 }
             }
             .sheet(isPresented: $showDefaultRoutines) {
-                DefaultRoutinesSheet(onSelect: { routineName in
-                    viewModel.addRoutine(name: routineName)
+                DefaultRoutinesSheet(onSelect: { routineName, category in
+                    viewModel.addRoutine(name: routineName, category: category)
                     showSuccessToast(L("toast.routine.added"))
                 })
             }
@@ -418,7 +418,7 @@ struct DefaultRoutinesSheet: View {
     @State private var selectedRoutine: String?
     @State private var showCheckmark = false
 
-    let onSelect: (String) -> Void
+    let onSelect: (String, RoutineCategory) -> Void
 
     var body: some View {
         NavigationView {
@@ -500,7 +500,7 @@ struct DefaultRoutinesSheet: View {
                                                     selectedRoutine = nil
                                                 }
 
-                                                onSelect(routine)
+                                                onSelect(routine, .other)
                                             }) {
                                                 ZStack {
                                                     HStack {
@@ -552,75 +552,82 @@ struct DefaultRoutinesSheet: View {
                                 .padding(.vertical, 8)
                         }
 
-                        // Built-in Routines Section
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "lightbulb.fill")
-                                    .foregroundColor(.blue)
-                                    .font(.caption)
-                                Text(L("routine.examples.built.in"))
-                                    .font(.headline)
-                                    .foregroundColor(.blue)
-                            }
-                            .padding(.horizontal)
-
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ], spacing: 12) {
-                                ForEach(DefaultRoutines.builtInExamples, id: \.self) { routine in
-                                    Button(action: {
-                                        // Strong haptic feedback
-                                        let generator = UIImpactFeedbackGenerator(style: .heavy)
-                                        generator.impactOccurred()
-
-                                        // Visual feedback - show checkmark animation
-                                        selectedRoutine = routine
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                            showCheckmark = true
-                                        }
-
-                                        // Hide checkmark and execute selection
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                            withAnimation {
-                                                showCheckmark = false
-                                            }
-                                            selectedRoutine = nil
-                                        }
-
-                                        onSelect(routine)
-                                    }) {
-                                        ZStack {
-                                            HStack {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .foregroundColor(.blue)
-                                                    .font(.caption)
-
-                                                Text(routine)
-                                                    .font(.body)
-                                                    .foregroundColor(.primary)
-
-                                                Spacer()
-                                            }
-
-                                            // Checkmark overlay
-                                            if selectedRoutine == routine && showCheckmark {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .font(.title)
-                                                    .foregroundColor(.blue)
-                                                    .transition(.scale.combined(with: .opacity))
-                                            }
-                                        }
-                                        .padding()
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.blue.opacity(0.1))
-                                        )
+                        // Built-in Routines Section - Categorized
+                        ForEach(RoutineCategory.allCases, id: \.self) { category in
+                            if let routines = DefaultRoutines.categorizedExamples[category], !routines.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Image(systemName: category.icon)
+                                            .foregroundColor(category.color)
+                                            .font(.caption)
+                                        Text(category.displayName)
+                                            .font(.headline)
+                                            .foregroundColor(category.color)
                                     }
-                                    .bouncyButton()
+                                    .padding(.horizontal)
+
+                                    LazyVGrid(columns: [
+                                        GridItem(.flexible()),
+                                        GridItem(.flexible())
+                                    ], spacing: 12) {
+                                        ForEach(routines, id: \.name) { example in
+                                            Button(action: {
+                                                // Strong haptic feedback
+                                                let generator = UIImpactFeedbackGenerator(style: .heavy)
+                                                generator.impactOccurred()
+
+                                                // Visual feedback - show checkmark animation
+                                                selectedRoutine = example.name
+                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                                    showCheckmark = true
+                                                }
+
+                                                // Hide checkmark and execute selection
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                                    withAnimation {
+                                                        showCheckmark = false
+                                                    }
+                                                    selectedRoutine = nil
+                                                }
+
+                                                onSelect(example.name, example.category)
+                                            }) {
+                                                ZStack {
+                                                    HStack {
+                                                        Image(systemName: category.icon)
+                                                            .foregroundColor(category.color)
+                                                            .font(.caption)
+
+                                                        Text(example.name)
+                                                            .font(.body)
+                                                            .foregroundColor(.primary)
+
+                                                        Spacer()
+                                                    }
+
+                                                    // Checkmark overlay
+                                                    if selectedRoutine == example.name && showCheckmark {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.title)
+                                                            .foregroundColor(category.color)
+                                                            .transition(.scale.combined(with: .opacity))
+                                                    }
+                                                }
+                                                .padding()
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(category.color.opacity(0.1))
+                                                )
+                                            }
+                                            .bouncyButton()
+                                        }
+                                    }
+                                    .padding(.horizontal)
                                 }
+
+                                Divider()
+                                    .padding(.vertical, 8)
                             }
-                            .padding(.horizontal)
                         }
                     }
                     .padding(.bottom)

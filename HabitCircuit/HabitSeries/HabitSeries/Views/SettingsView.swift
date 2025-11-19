@@ -282,7 +282,7 @@ struct SettingsView: View {
                 SavedRoutinesView(viewModel: viewModel)
             }
             .sheet(isPresented: $showDefaultRoutinesManagement) {
-                DefaultRoutinesManagementView()
+                DefaultRoutinesManagementView(viewModel: viewModel)
             }
             .sheet(isPresented: $showTimeGuide) {
                 TimeGuideView(isPresented: $showTimeGuide)

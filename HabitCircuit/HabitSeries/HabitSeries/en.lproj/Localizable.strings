@@ -31,6 +31,7 @@
 
 /* Categories */
 "category.health" = "Health";
+"category.exercise" = "Exercise";
 "category.study" = "Study";
 "category.work" = "Work";
 "category.household" = "Household";
@@ -40,7 +41,8 @@
 "category.other" = "Other";
 
 /* Category Descriptions */
-"category.health.desc" = "Exercise, meals, sleep, etc.";
+"category.health.desc" = "Vitamins, meals, sleep, etc.";
+"category.exercise.desc" = "Workout, stretching, walking, etc.";
 "category.study.desc" = "Reading, courses, learning, etc.";
 "category.work.desc" = "Tasks, projects, meetings, etc.";
 "category.household.desc" = "Cleaning, cooking, laundry, etc.";
